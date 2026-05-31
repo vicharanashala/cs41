@@ -5,37 +5,36 @@ Community-driven Q&A platform for internship seekers.
 ## Features
 
 - Ask and browse FAQs
-- Community-driven answers
+- Community-driven question and answer platform
 - AI-powered FAQ assistance
-- Search and recommendations
-- Insights and leaderboard
-- Authentication support
-
-## Tech Stack
-
-- React
-- Vite
-- Tailwind CSS
-- Node.js
-- Express
-- SQLite
+- Search and FAQ recommendations
+- Insights and leaderboard pages
+- React + Vite frontend
+- Node.js backend with database support
 
 ## Project Structure
 
 ```text
-client/     React frontend
-server/     Node.js backend
-research/   Research files
+client/     -> React frontend
+server/     -> Node.js backend
+research/   -> Research files and datasets
 ```
 
-## Setup
+## Quick Start
 
 ### Backend
 
 ```bash
 cd server
 npm install
+npm run seed
 npm run dev
+```
+
+Backend runs on:
+
+```text
+http://localhost:3001
 ```
 
 ### Frontend
@@ -46,12 +45,37 @@ npm install
 npm run dev
 ```
 
-Frontend:
+Frontend runs on:
+
+```text
 http://localhost:5173
+```
 
-Backend:
-http://localhost:3001
 
-## Contributors
+## Demo Accounts
 
-- Vicharanashala Internship Team
+All demo users have password: `demo1234`
+
+- priya@university.edu
+- rahul@institute.edu
+- sneha@college.org
+- arjun@tech.edu
+- zara@university.edu
+
+## Tech Stack
+
+- React
+- Vite
+- Tailwind CSS
+- Node.js
+- Express
+- SQLite
+- JavaScript
+
+## Repository
+
+This repository contains the Crowd Source FAQs platform developed as part of the Vicharanashala internship project.
+
+## License
+
+Refer to the LICENSE file included in this repository.
