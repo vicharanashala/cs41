@@ -1,0 +1,26 @@
+.layout { display: grid; grid-template-columns: 1fr 280px; gap: 32px; }
+
+@media (max-width: 800px) { .layout { grid-template-columns: 1fr; } .tips { display: none; } }
+
+.form { padding: 32px; display: flex; flex-direction: column; gap: 24px; }
+
+.inputError { border-color: var(--accent-warn) !important; }
+
+.formActions { display: flex; justify-content: flex-end; gap: 12px; padding-top: 8px; }
+
+.tipCard { padding: 24px; }
+.tipCard:hover { border-color: rgba(255,255,255,0.12); }
+
+.tipTitle {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.tipList { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.tipList li { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+.tipList strong { color: var(--text-primary); }
