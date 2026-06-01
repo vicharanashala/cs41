@@ -453,14 +453,17 @@ export default function CommunityPage() {
       }));
     }
 
-    // Persist to backend
+    // Persist to backend — URL always uses questionId (route param); targetId goes in body
     try {
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      await fetch(`${API}/community/questions/${targetId}/vote`, {
+      const url = isQuestion
+        ? `${API}/community/questions/${targetId}/vote`
+        : `${API}/community/questions/${questionId}/vote`;
+      await fetch(url, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ direction, isQuestion }),
+        body: JSON.stringify({ targetId, direction, isQuestion }),
       });
     } catch { /* silent - already optimistically updated */ }
   };
