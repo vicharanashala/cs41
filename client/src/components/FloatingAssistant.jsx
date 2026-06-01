@@ -118,12 +118,19 @@ function renderMessageText(text) {
         </p>
       );
     }
-    // Bold text with **
-    const boldParsed = line.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
-    if (boldParsed !== line) {
-      return line.trim() ? (
-        <p key={li} className={li > 0 ? 'mt-2' : ''} dangerouslySetInnerHTML={{ __html: boldParsed }} />
-      ) : null;
+    // Bold text with ** — parsed into React elements, no raw HTML
+    const boldMatch = line.match(/\*\*(.+?)\*\*/);
+    if (boldMatch) {
+      const before = line.slice(0, boldMatch.index);
+      const bold   = boldMatch[1];
+      const after  = line.slice(boldMatch.index + boldMatch[0].length);
+      return (
+        <p key={li} className={li > 0 ? 'mt-2' : ''}>
+          {before && <span>{before}</span>}
+          <b className="font-semibold text-gray-100">{bold}</b>
+          {after  && renderMessageText(after)}
+        </p>
+      );
     }
     // Numbered lists
     if (/^\d+[\.\)]\s/.test(line.trim())) {
