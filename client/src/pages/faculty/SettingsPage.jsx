@@ -323,28 +323,28 @@ export default function SettingsPage() {
         </Row>
         <Row
           label="Min SP to submit FAQ"
-          description="Minimum student points required to submit a new FAQ"
+          description="Minimum intern points required to submit a new FAQ"
           error={errors.min_sp_to_submit}
         >
           <NumberInput value={settings.min_sp_to_submit} onChange={v => set('min_sp_to_submit', v)} min={0} max={1000} suffix="SP" />
         </Row>
         <Row
           label="Min SP to answer"
-          description="Minimum student points required to submit an answer"
+          description="Minimum intern points required to submit an answer"
           error={errors.min_sp_to_answer}
         >
           <NumberInput value={settings.min_sp_to_answer} onChange={v => set('min_sp_to_answer', v)} min={0} max={1000} suffix="SP" />
         </Row>
         <Row
           label="Min SP to vote"
-          description="Minimum student points required to vote on content"
+          description="Minimum intern points required to vote on content"
           error={errors.min_sp_to_vote}
         >
           <NumberInput value={settings.min_sp_to_vote} onChange={v => set('min_sp_to_vote', v)} min={0} max={1000} suffix="SP" />
         </Row>
         <Row
           label="Max questions per day"
-          description="Maximum FAQs a student can submit per day"
+          description="Maximum FAQs an intern can submit per day"
           error={errors.max_questions_per_day}
         >
           <NumberInput value={settings.max_questions_per_day} onChange={v => set('max_questions_per_day', v)} min={1} max={100} />
@@ -507,7 +507,7 @@ export default function SettingsPage() {
         </Row>
         <Row
           label="Notify on SP change"
-          description="Alert users when their student points change"
+          description="Alert users when their intern points change"
           error={errors.notify_on_sp_change}
         >
           <Toggle value={toBool(settings.notify_on_sp_change)} onChange={v => set('notify_on_sp_change', v)} />

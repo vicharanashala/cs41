@@ -8,7 +8,7 @@ const ACTION_CONFIG = {
   'faq':          { label: 'FAQ / Question', color: '#3b82f6', bg: '#eff6ff' },
   'tag':          { label: 'Tag',            color: '#8b5cf6', bg: '#f5f3ff' },
   'flag':         { label: 'Moderation',     color: '#f59e0b', bg: '#fffbeb' },
-  'sp':           { label: 'Student Points', color: '#10b981', bg: '#f0fdf4' },
+  'sp':           { label: 'Intern Points',  color: '#10b981', bg: '#f0fdf4' },
 };
 
 function getActionInfo(action) {
@@ -39,7 +39,7 @@ const ENTITY_OPTIONS = [
   { value: 'question', label: 'Question' },
   { value: 'faq_tag', label: 'Tag' },
   { value: 'content_flag', label: 'Content Flag' },
-  { value: 'user', label: 'User / Student' },
+  { value: 'user', label: 'User / Intern' },
 ];
 
 const ACTION_OPTIONS = [
@@ -47,7 +47,7 @@ const ACTION_OPTIONS = [
   { value: 'faq.', label: 'FAQ Actions' },
   { value: 'tag.', label: 'Tag Actions' },
   { value: 'flag.', label: 'Moderation Actions' },
-  { value: 'sp.', label: 'Student Points' },
+  { value: 'sp.', label: 'Intern Points' },
 ];
 
 const LIMIT_OPTIONS = [

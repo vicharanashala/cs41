@@ -46,18 +46,32 @@ function voteTransaction(userId, targetType, targetId, direction, authorId) {
 // ── AUTH ─────────────────────────────────────────────────────────────────────
 
 router.post('/auth/register', async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, role } = req.body;
   if (!name || !email || !password) return res.status(400).json({ error: 'Name, email, and password are required' });
+  if (!['intern', 'faculty'].includes(role)) return res.status(400).json({ error: 'Invalid role' });
   const existing = queryOne('SELECT id FROM users WHERE email = ?', [email]);
   if (existing) return res.status(409).json({ error: 'Email already registered' });
 
   const hash = await bcrypt.hash(password, 10);
   const id = uuidv4();
+  const safeRole = role === 'faculty' ? 'faculty' : 'intern';
+  const verified = safeRole === 'faculty' ? 1 : 0;
+  const nowMs = Date.now();
   run('INSERT INTO users (id, name, email, password_hash, role, is_verified) VALUES (?, ?, ?, ?, ?, ?)',
-    [id, name, email, hash, 'intern', 0]);
+    [id, name, email, hash, safeRole, verified]);
 
-  const token = jwt.sign({ id, name, email, role: 'intern', is_verified: 0 }, JWT_SECRET, { expiresIn: '7d' });
-  res.status(201).json({ user: { id, name, email, role: 'intern', is_verified: 0, reputation: 0 }, token });
+  // Auto-create SP ledger entry for new interns (welcome bonus)
+  if (safeRole === 'intern') {
+    run(
+      `INSERT INTO sp_ledger (id, user_id, action_type, points, balance_after, reference_id, reference_type, description, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [uuidv4(), id, 'welcome_bonus', 10, 10, null, null, 'Welcome bonus on registration', nowMs]
+    );
+    run('UPDATE users SET reputation = 10 WHERE id = ?', [id]);
+  }
+
+  const token = jwt.sign({ id, name, email, role: safeRole, is_verified: verified }, JWT_SECRET, { expiresIn: '7d' });
+  res.status(201).json({ user: { id, name, email, role: safeRole, is_verified: verified, reputation: safeRole === 'intern' ? 10 : 0 }, token });
 });
 
 router.post('/auth/login', async (req, res) => {
@@ -247,8 +261,9 @@ router.post('/community/questions', async (req, res) => {
 
   const { v4: uuidv4 } = await import('uuid');
   const id = uuidv4();
-  run('INSERT INTO questions (id, user_id, title, description, category, tags) VALUES (?, ?, ?, ?, ?, ?)',
-    [id, anonUser.id, title, '', category, '[]']);
+  // Intern questions go directly to pending_review for faculty review
+  run('INSERT INTO questions (id, user_id, title, description, category, faq_status, trigger_event, trigger_at, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [id, anonUser.id, title, '', category, 'pending_review', 'submitted_by_intern', Date.now(), '[]']);
 
   // Award SP for asking
   run('UPDATE users SET reputation = reputation + 5 WHERE id = ?', [anonUser.id]);

@@ -505,7 +505,7 @@ export default function QuestionReviewPage() {
             <textarea
               value={notes}
               onChange={e => setNotes(e.target.value)}
-              placeholder="Optional notes for the student..."
+              placeholder="Optional notes for the intern..."
               rows={3}
               style={{
                 width: '100%', boxSizing: 'border-box', padding: '0.625rem',

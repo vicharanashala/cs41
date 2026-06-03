@@ -280,7 +280,7 @@ export default function AnalyticsPage() {
         <KPICard label="Total FAQs"            value={kpiMap['total_faqs']?.value ?? '—'}        icon="📋" color="#3b82f6" trend={kpiMap['total_faqs']?.trend} />
         <KPICard label="Pending Review"        value={kpiMap['pending_review']?.value ?? '—'}     icon="⏳" color="#f59e0b" />
         <KPICard label="Open Flags"            value={kpiMap['open_flags']?.value ?? '—'}         icon="🚩" color="#ef4444" />
-        <KPICard label="Total Students"        value={kpiMap['students']?.value ?? '—'}           icon="👥" color="#10b981" />
+        <KPICard label="Total Interns"        value={kpiMap['interns']?.value ?? '—'}           icon="👥" color="#10b981" />
         <KPICard label="Avg SP"                value={kpiMap['avg_sp']?.value ?? '—'}             icon="⭐" color="#8b5cf6" />
         <KPICard label="This Month Published"  value={kpiMap['published_this_month']?.value ?? '—'} icon="✅" color="#06b6d4" />
       </div>

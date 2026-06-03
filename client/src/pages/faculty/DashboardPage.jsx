@@ -9,7 +9,7 @@ function StatCard({ label, value, icon, color }) {
       boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0',
     }}>
       <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{icon}</div>
-      <div style={{ fontSize: '1.75rem', fontWeight: 700, color: card.color }}>
+      <div style={{ fontSize: '1.75rem', fontWeight: 700, color: color }}>
         {value ?? '—'}
       </div>
       <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>{label}</div>
@@ -77,6 +77,7 @@ export default function DashboardPage() {
   const stats = data?.stats ?? {};
   const reviewedThisWeek = data?.reviewedThisWeek ?? 0;
   const recentAnalyses = data?.recentAnalyses ?? [];
+  const recentInternQuestions = data?.recentInternQuestions ?? [];
 
   return (
     <div style={{ padding: '2rem', maxWidth: 1100, margin: '0 auto' }}>
@@ -115,6 +116,11 @@ export default function DashboardPage() {
           <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>🗓️</div>
           <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#0ea5e9' }}>{reviewedThisWeek}</div>
           <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>Reviewed This Week</div>
+        </div>
+        <div style={{ background: '#fff', borderRadius: 10, padding: '1.25rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0' }}>
+          <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>👥</div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#8b5cf6' }}>{stats.totalInterns ?? '—'}</div>
+          <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>Total Interns</div>
         </div>
       </div>
 
@@ -193,6 +199,115 @@ export default function DashboardPage() {
             ))}
           </div>
         )}
+      </SectionCard>
+
+      {/* New Questions from Interns */}
+      <SectionCard title="🆕 NEW QUESTIONS FROM INTERNS">
+        {recentInternQuestions.length === 0 ? (
+          <div style={{ color: '#94a3b8', fontSize: '0.85rem', textAlign: 'center', padding: '1rem' }}>
+            No pending questions from interns.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {recentInternQuestions.map((q) => (
+              <div key={q.id} style={{
+                display: 'flex', alignItems: 'center', gap: '1rem',
+                padding: '0.75rem 1rem', background: '#f8fafc', borderRadius: 8,
+                border: '1px solid #e2e8f0',
+              }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 8,
+                  background: '#8b5cf618',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center',
+                  justifyContent: 'center', flexShrink: 0,
+                }}>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#8b5cf6' }}>
+                    {q.answer_count ?? 0}
+                  </span>
+                  <span style={{ fontSize: '0.55rem', color: '#94a3b8' }}>ans</span>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {q.title}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 2 }}>
+                    by <strong style={{ color: '#334155' }}>{q.author_name || 'Anonymous'}</strong>
+                    {q.trigger_at ? ` · ${new Date(q.trigger_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` : ''}
+                  </div>
+                </div>
+                <Link
+                  to={`/faculty/queue/${q.id}`}
+                  style={{
+                    padding: '0.35rem 0.75rem', background: '#8b5cf6', color: '#fff',
+                    borderRadius: 5, textDecoration: 'none', fontSize: '0.75rem', fontWeight: 500,
+                    flexShrink: 0,
+                  }}
+                >
+                  Review →
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
+      </SectionCard>
+
+      {/* SP Management — Intern Accounts */}
+      <SectionCard title="📊 SP MANAGEMENT — INTERN ACCOUNTS">
+        {(() => {
+          const interns = data?.recentlyAddedInterns ?? [];
+          if (interns.length === 0) {
+            return (
+              <div style={{ color: '#94a3b8', fontSize: '0.85rem', textAlign: 'center', padding: '1.5rem' }}>
+                No intern accounts found.
+              </div>
+            );
+          }
+          return (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+                <thead>
+                  <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                    {['Name', 'Email', 'SP', 'Frozen', 'Watchlist', 'Joined'].map(h => (
+                      <th key={h} style={{ padding: '0.5rem 0.75rem', textAlign: 'left', color: '#64748b', fontWeight: 600 }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {interns.map((s, i) => (
+                    <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
+                      <td style={{ padding: '0.5rem 0.75rem', fontWeight: 500, color: '#1e293b' }}>{s.name || '—'}</td>
+                      <td style={{ padding: '0.5rem 0.75rem', color: '#64748b' }}>{s.email}</td>
+                      <td style={{ padding: '0.5rem 0.75rem', fontWeight: 600, color: s.reputation > 0 ? '#059669' : '#94a3b8' }}>
+                        {s.reputation ?? 0}
+                      </td>
+                      <td style={{ padding: '0.5rem 0.75rem' }}>
+                        {s.is_frozen ? (
+                          <span style={{ color: '#ef4444', fontWeight: 600 }}>🔒 Yes</span>
+                        ) : (
+                          <span style={{ color: '#10b981' }}>—</span>
+                        )}
+                      </td>
+                      <td style={{ padding: '0.5rem 0.75rem', color: s.watchlist_entries > 0 ? '#f59e0b' : '#94a3b8' }}>
+                        {s.watchlist_entries > 0 ? `⚠ ${s.watchlist_entries}` : '—'}
+                      </td>
+                      <td style={{ padding: '0.5rem 0.75rem', color: '#94a3b8' }}>
+                        {s.created_at ? new Date(s.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div style={{ marginTop: '0.75rem', padding: '0.5rem', textAlign: 'right' }}>
+                <Link
+                  to="/faculty/interns"
+                  style={{ fontSize: '0.8rem', color: '#3b82f6', textDecoration: 'none', fontWeight: 500 }}
+                >
+                  View All Interns →
+                </Link>
+              </div>
+            </div>
+          );
+        })()}
       </SectionCard>
 
       {/* Quick actions */}

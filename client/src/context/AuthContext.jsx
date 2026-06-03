@@ -40,13 +40,15 @@ export function AuthProvider({ children }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
-    
+
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Login failed');
-    
-    setToken(data.token);
+
+    // Set user synchronously so FacultyRoute sees it on the very next render
     setUser(data.user);
+    setToken(data.token);
     localStorage.setItem('token', data.token);
+    setLoading(false); // skip the redundant /me call
     return data.user;
   };
 
@@ -56,13 +58,14 @@ export function AuthProvider({ children }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userData)
     });
-    
+
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Registration failed');
-    
-    setToken(data.token);
+
     setUser(data.user);
+    setToken(data.token);
     localStorage.setItem('token', data.token);
+    setLoading(false);
     return data.user;
   };
 

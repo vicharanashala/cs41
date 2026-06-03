@@ -13,7 +13,7 @@ import DashboardPage from './pages/faculty/DashboardPage.jsx';
 import ReviewQueuePage from './pages/faculty/ReviewQueuePage.jsx';
 import QuestionReviewPage from './pages/faculty/QuestionReviewPage.jsx';
 import ModerationPage from './pages/faculty/ModerationPage.jsx';
-import StudentManagementPage from './pages/faculty/StudentManagementPage.jsx';
+import InternManagementPage from './pages/faculty/InternManagementPage.jsx';
 import AuditLogPage from './pages/faculty/AuditLogPage.jsx';
 import TagsManagementPage from './pages/faculty/TagsManagementPage.jsx';
 import AnalyticsPage from './pages/faculty/AnalyticsPage.jsx';
@@ -43,7 +43,7 @@ export default function App() {
             <Route path="queue" element={<ReviewQueuePage />} />
             <Route path="queue/:id" element={<QuestionReviewPage />} />
             <Route path="moderation" element={<ModerationPage />} />
-            <Route path="students" element={<StudentManagementPage />} />
+            <Route path="interns" element={<InternManagementPage />} />
             <Route path="tags" element={<TagsManagementPage />} />
             <Route path="audit" element={<AuditLogPage />} />
             <Route path="analytics" element={<AnalyticsPage />} />

@@ -501,10 +501,6 @@ export default function CommunityPage() {
       setError('You must be logged in to ask a question.');
       return false;
     }
-    if (!user.is_verified) {
-      setError('You must verify your offer letter to ask a question.');
-      return false;
-    }
     try {
       const res = await fetch(`${API}/questions`, {
         method: 'POST',
@@ -526,10 +522,6 @@ export default function CommunityPage() {
   const handleSubmitAnswer = async (qId, content) => {
     if (!user) {
       setError('You must be logged in to answer.');
-      return;
-    }
-    if (!user.is_verified) {
-      setError('You must verify your offer letter to answer.');
       return;
     }
     try {
@@ -581,7 +573,6 @@ export default function CommunityPage() {
         <button 
           onClick={() => {
             if (!user) setError('Please sign in to ask a question.');
-            else if (!user.is_verified) setError('Please verify your offer letter to ask questions.');
             else setShowAsk(true);
           }} 
           className="btn-primary"

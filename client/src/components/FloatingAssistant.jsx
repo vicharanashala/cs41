@@ -242,10 +242,12 @@ export default function FloatingAssistant() {
   useEffect(() => {
     if (allFAQs.length > 0) {
       buildFAQIndex(allFAQs);
-      // Initialize Semantic AI model in the background
-      initAIEngine(allFAQs, (progress) => {
-        // Optional: can show progress in UI if needed, for now just load
-      }).catch(console.error);
+      // Lazily import AI engine — only runs in browser (WASM), not during SSR/build
+      import('../utils/ai-engine.js')
+        .then(({ initAIEngine }) =>
+          initAIEngine(allFAQs).catch(() => {})
+        )
+        .catch(() => { });
       setIndexReady(true);
     }
   }, [allFAQs]);

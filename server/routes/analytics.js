@@ -393,8 +393,8 @@ router.post('/refresh', (req, res) => {
       [openFlags, 'Open Moderation Flags', now]);
     upsert('analytics_kpi', 'key', 'avg_sp', ['value', 'label', 'updated_at'],
       [Math.round(avgSP), 'Average SP', now]);
-    upsert('analytics_kpi', 'key', 'students', ['value', 'label', 'updated_at'],
-      [totalStudents, 'Total Students', now]);
+    upsert('analytics_kpi', 'key', 'interns', ['value', 'label', 'updated_at'],
+      [totalStudents, 'Total Interns', now]);
 
     // ── FAQ daily refresh (last 30 days) ─────────────────────────────────────
     for (let i = 0; i < 30; i++) {

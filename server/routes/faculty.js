@@ -64,15 +64,44 @@ router.get('/dashboard', (req, res) => {
     LIMIT 5
   `);
 
+  // Intern stats
+  const totalInterns = queryOne("SELECT COUNT(*) as c FROM users WHERE role IN ('student','intern')")?.c || 0;
+
+  // New questions from interns (recent questions submitted by intern/student users)
+  const recentInternQuestions = queryAll(`
+    SELECT q.id, q.title, q.category, q.faq_status, q.trigger_event, q.trigger_at, q.created_at,
+           u.name as author_name, u.email as author_email,
+           COALESCE(a_count.answer_count, 0) as answer_count
+    FROM questions q
+    JOIN users u ON q.user_id = u.id
+    LEFT JOIN (SELECT question_id, COUNT(*) as answer_count FROM answers GROUP BY question_id) a_count ON q.id = a_count.question_id
+    WHERE u.role IN ('intern', 'student')
+    ORDER BY q.created_at DESC
+    LIMIT 10
+  `);
+
+  // Recently added interns (for SP management table on dashboard)
+  const recentlyAddedInterns = queryAll(`
+    SELECT u.id, u.name, u.email, u.reputation, u.role, u.is_frozen, u.created_at,
+           (SELECT COUNT(*) FROM sp_watchlist w WHERE w.user_id = u.id) as watchlist_entries
+    FROM users u
+    WHERE u.role = 'intern'
+    ORDER BY u.created_at DESC
+    LIMIT 20
+  `);
+
   res.json({
     stats: {
       pending, published, rejected, changes, total,
       avgQueueHours: Math.round(avgQueueHours * 10) / 10,
       analyzedCount,
       avgConfidence: Math.round(avgConfidence),
+      totalInterns,
     },
     reviewedThisWeek,
     recentAnalyses,
+    recentInternQuestions,
+    recentlyAddedInterns,
   });
 });
 
@@ -856,18 +885,22 @@ const SP_ACTIONS = {
   account_frozen:         { label: 'Account Frozen',          points: -50},
 };
 
-// ── GET /faculty/students/overview ────────────────────────────────────────────
-router.get('/students/overview', (req, res) => {
-  const total = queryOne('SELECT COUNT(*) as c FROM users WHERE role = ?', ['student'])?.c || 0;
+// ── GET /faculty/interns/overview ────────────────────────────────────────────
+router.get('/interns/overview', (req, res) => {
+  const total = queryOne("SELECT COUNT(*) as c FROM users WHERE role IN ('student','intern')")?.c || 0;
   const active7d = queryOne(
     `SELECT COUNT(DISTINCT user_id) as c FROM sp_ledger WHERE created_at >= ?`,
     [Date.now() - 7 * 24 * 3600 * 1000]
   )?.c || 0;
-  const frozenCount = queryOne('SELECT COUNT(*) as c FROM users WHERE is_frozen = 1')?.c || 0;
+  const frozenCount = queryOne('SELECT COUNT(*) as c FROM users WHERE is_frozen = 1 AND role IN (\'student\',\'intern\')')?.c || 0;
   const onWatchlist = queryOne('SELECT COUNT(*) as c FROM sp_watchlist')?.c || 0;
   const openAnomalies = queryOne("SELECT COUNT(*) as c FROM sp_anomaly_events WHERE status = 'open'")?.c || 0;
 
-  // SP distribution buckets
+  // Role breakdown counts
+  const internCount  = queryOne("SELECT COUNT(*) as c FROM users WHERE role = 'intern'")?.c || 0;
+  const studentCount = queryOne("SELECT COUNT(*) as c FROM users WHERE role = 'student'")?.c || 0;
+
+  // SP distribution buckets (intern + student)
   const distribution = queryAll(`
     SELECT
       CASE
@@ -880,7 +913,7 @@ router.get('/students/overview', (req, res) => {
         ELSE '500+'
       END as bucket,
       COUNT(*) as count
-    FROM users WHERE role = 'student'
+    FROM users WHERE role IN ('student','intern')
     GROUP BY bucket
     ORDER BY
       CASE bucket
@@ -891,20 +924,20 @@ router.get('/students/overview', (req, res) => {
 
   // Top 10 SP earners
   const topEarners = queryAll(`
-    SELECT u.id, u.name, u.email, u.reputation, u.reputation, u.is_frozen, u.created_at
-    FROM users u WHERE u.role = 'student' AND u.reputation > 0
+    SELECT u.id, u.name, u.email, u.reputation, u.is_frozen, u.role, u.created_at
+    FROM users u WHERE u.role IN ('student','intern') AND u.reputation > 0
     ORDER BY u.reputation DESC LIMIT 10
   `);
 
-  // Bottom 5 (lowest SP, excluding brand new)
+  // Bottom 5 (lowest SP)
   const bottomEarners = queryAll(`
-    SELECT u.id, u.name, u.email, u.reputation, u.reputation, u.is_frozen, u.created_at
-    FROM users u WHERE u.role = 'student'
+    SELECT u.id, u.name, u.email, u.reputation, u.is_frozen, u.role, u.created_at
+    FROM users u WHERE u.role IN ('student','intern')
     ORDER BY u.reputation ASC LIMIT 5
   `);
 
   res.json({
-    totalStudents: total,
+    totalInterns: internCount,
     activeLast7Days: active7d,
     frozenCount,
     onWatchlist,
@@ -915,13 +948,13 @@ router.get('/students/overview', (req, res) => {
   });
 });
 
-// ── GET /faculty/students ─────────────────────────────────────────────────────
-router.get('/students', (req, res) => {
+// ── GET /faculty/interns ──────────────────────────────────────────────────────
+router.get('/interns', (req, res) => {
   const { search, sort_by = 'reputation', order = 'desc', page = 1, sp_min, sp_max, is_frozen, on_watchlist } = req.query;
   const limit = 25, offset = (Number(page) - 1) * limit;
 
   const conditions = ['u.role = ?'];
-  const params = ['student'];
+  const params = ['intern'];
 
   if (search) {
     conditions.push('(u.name LIKE ? OR u.email LIKE ?)');
@@ -935,14 +968,14 @@ router.get('/students', (req, res) => {
   }
 
   const where = conditions.join(' AND ');
-  const validSorts = ['reputation', 'reputation', 'name', 'created_at'];
+  const validSorts = ['reputation', 'name', 'created_at'];
   const sortCol = validSorts.includes(sort_by) ? sort_by : 'reputation';
   const sortDir = order === 'asc' ? 'ASC' : 'DESC';
 
   const total = queryOne(`SELECT COUNT(*) as c FROM users u WHERE ${where}`, params)?.c || 0;
 
-  const students = queryAll(`
-    SELECT u.id, u.name, u.email, u.reputation, u.reputation, u.is_frozen,
+  const interns = queryAll(`
+    SELECT u.id, u.name, u.email, u.role, u.reputation, u.is_frozen,
            u.frozen_by, u.frozen_at, u.created_at,
            (SELECT COUNT(*) FROM sp_watchlist w WHERE w.user_id = u.id) as watchlist_entries,
            (SELECT COUNT(*) FROM sp_anomaly_events a WHERE a.user_id = u.id AND a.status = 'open') as open_anomalies
@@ -953,7 +986,7 @@ router.get('/students', (req, res) => {
   `, [...params, limit, offset]);
 
   res.json({
-    students: students.map(s => ({
+    interns: interns.map(s => ({
       ...s,
       frozen_at: s.frozen_at ? new Date(s.frozen_at).toISOString() : null,
       created_at: s.created_at ? new Date(s.created_at).toISOString() : null,
@@ -967,7 +1000,7 @@ router.get('/students', (req, res) => {
 // ── GET /faculty/students/:id ─────────────────────────────────────────────────
 
 // ── GET /faculty/students/watchlist ───────────────────────────────────────────
-router.get('/students/watchlist', (req, res) => {
+router.get('/interns/watchlist', (req, res) => {
   const { page = 1 } = req.query;
   const limit = 25, offset = (Number(page) - 1) * limit;
   const total = queryOne('SELECT COUNT(*) as c FROM sp_watchlist')?.c || 0;
@@ -990,7 +1023,7 @@ router.get('/students/watchlist', (req, res) => {
 });
 
 // ── GET /faculty/students/anomalies ───────────────────────────────────────────
-router.get('/students/anomalies', (req, res) => {
+router.get('/interns/anomalies', (req, res) => {
   const { status = 'open', severity, page = 1 } = req.query;
   const limit = 25, offset = (Number(page) - 1) * limit;
 
@@ -1021,16 +1054,16 @@ router.get('/students/anomalies', (req, res) => {
     page: Number(page),
     totalPages: Math.ceil(total / limit),
   });
-router.get('/students/:id', (req, res) => {
+router.get('/interns/:id', (req, res) => {
   const student = queryOne(`
-    SELECT u.id, u.name, u.email, u.reputation, u.reputation, u.is_frozen,
+    SELECT u.id, u.name, u.email, u.reputation, u.is_frozen,
            u.frozen_by, u.frozen_at, u.created_at,
            (SELECT COUNT(*) FROM sp_watchlist w WHERE w.user_id = u.id) as watchlist_entries,
            (SELECT COUNT(*) FROM sp_anomaly_events a WHERE a.user_id = u.id AND a.status = 'open') as open_anomalies
-    FROM users u WHERE u.id = ? AND u.role = 'student'
+    FROM users u WHERE u.id = ? AND u.role IN ('student','intern')
   `, [req.params.id]);
 
-  if (!student) return res.status(404).json({ error: 'Student not found' });
+  if (!student) return res.status(404).json({ error: 'Intern not found' });
 
   const recentLedger = queryAll(`
     SELECT sl.id, sl.action_type, sl.points, sl.balance_after, sl.reference_id,
@@ -1068,7 +1101,7 @@ router.get('/students/:id', (req, res) => {
 });
 
 // ── POST /faculty/students/:id/adjust ─────────────────────────────────────────
-router.post('/students/:id/adjust', (req, res) => {
+router.post('/interns/:id/adjust', (req, res) => {
   const { points_delta, reason } = req.body;
   if (points_delta === undefined || !reason) {
     return res.status(400).json({ error: 'points_delta and reason are required' });
@@ -1081,8 +1114,8 @@ router.post('/students/:id/adjust', (req, res) => {
     return res.status(400).json({ error: 'Adjustment magnitude cannot exceed 1000 SP' });
   }
 
-  const student = queryOne('SELECT id, reputation FROM users WHERE id = ? AND role = ?', [req.params.id, 'student']);
-  if (!student) return res.status(404).json({ error: 'Student not found' });
+  const student = queryOne('SELECT id, reputation, is_frozen FROM users WHERE id = ? AND role IN ("student","intern")', [req.params.id]);
+  if (!student) return res.status(404).json({ error: 'Intern not found' });
   if (student.is_frozen) return res.status(409).json({ error: 'Cannot adjust SP for a frozen account' });
 
   const newBalance = student.reputation + delta;
@@ -1110,9 +1143,9 @@ router.post('/students/:id/adjust', (req, res) => {
 });
 
 // ── POST /faculty/students/:id/freeze ─────────────────────────────────────────
-router.post('/students/:id/freeze', (req, res) => {
-  const student = queryOne('SELECT id, name, is_frozen FROM users WHERE id = ? AND role = ?', [req.params.id, 'student']);
-  if (!student) return res.status(404).json({ error: 'Student not found' });
+router.post('/interns/:id/freeze', (req, res) => {
+  const student = queryOne('SELECT id, name, is_frozen FROM users WHERE id = ? AND role IN ("student","intern")', [req.params.id]);
+  if (!student) return res.status(404).json({ error: 'Intern not found' });
   if (student.is_frozen) return res.status(409).json({ error: 'Account is already frozen' });
 
   const nowMs = Date.now();
@@ -1130,9 +1163,9 @@ router.post('/students/:id/freeze', (req, res) => {
 });
 
 // ── POST /faculty/students/:id/unfreeze ───────────────────────────────────────
-router.post('/students/:id/unfreeze', (req, res) => {
-  const student = queryOne('SELECT id, name, is_frozen FROM users WHERE id = ? AND role = ?', [req.params.id, 'student']);
-  if (!student) return res.status(404).json({ error: 'Student not found' });
+router.post('/interns/:id/unfreeze', (req, res) => {
+  const student = queryOne('SELECT id, name, is_frozen FROM users WHERE id = ? AND role IN ("student","intern")', [req.params.id]);
+  if (!student) return res.status(404).json({ error: 'Intern not found' });
   if (!student.is_frozen) return res.status(409).json({ error: 'Account is not frozen' });
 
   run('UPDATE users SET is_frozen = 0, frozen_by = NULL, frozen_at = NULL WHERE id = ?', [req.params.id]);
@@ -1143,7 +1176,7 @@ router.post('/students/:id/unfreeze', (req, res) => {
 });
 
 // ── GET /faculty/students/:id/ledger ──────────────────────────────────────────
-router.get('/students/:id/ledger', (req, res) => {
+router.get('/interns/:id/ledger', (req, res) => {
   const { page = 1, action_type, from_date, to_date } = req.query;
   const limit = 50, offset = (Number(page) - 1) * limit;
 
@@ -1178,7 +1211,7 @@ router.get('/students/:id/ledger', (req, res) => {
 });
 
 // ── GET /faculty/students/:id/adjustments ─────────────────────────────────────
-router.get('/students/:id/adjustments', (req, res) => {
+router.get('/interns/:id/adjustments', (req, res) => {
   const { page = 1 } = req.query;
   const limit = 50, offset = (Number(page) - 1) * limit;
   const total = queryOne('SELECT COUNT(*) as c FROM sp_adjustments WHERE user_id = ?', [req.params.id])?.c || 0;
@@ -1202,15 +1235,15 @@ router.get('/students/:id/adjustments', (req, res) => {
 
 
 // ── POST /faculty/students/watchlist ──────────────────────────────────────────
-router.post('/students/watchlist', (req, res) => {
+router.post('/interns/watchlist', (req, res) => {
   const { user_id, priority = 'medium', notes } = req.body;
   if (!user_id) return res.status(400).json({ error: 'user_id is required' });
 
-  const student = queryOne('SELECT id, name FROM users WHERE id = ? AND role = ?', [user_id, 'student']);
-  if (!student) return res.status(404).json({ error: 'Student not found' });
+  const student = queryOne('SELECT id, name FROM users WHERE id = ? AND role IN ("student","intern")', [user_id]);
+  if (!student) return res.status(404).json({ error: 'Intern not found' });
 
   const existing = queryOne('SELECT id FROM sp_watchlist WHERE user_id = ?', [user_id]);
-  if (existing) return res.status(409).json({ error: 'Student is already on the watchlist' });
+  if (existing) return res.status(409).json({ error: 'Intern is already on the watchlist' });
 
   const id = uuidv4();
   const nowMs = Date.now();
@@ -1225,7 +1258,7 @@ router.post('/students/watchlist', (req, res) => {
 });
 
 // ── DELETE /faculty/students/watchlist/:userId ────────────────────────────────
-router.delete('/students/watchlist/:userId', (req, res) => {
+router.delete('/interns/watchlist/:userId', (req, res) => {
   const entry = queryOne('SELECT id, user_id FROM sp_watchlist WHERE user_id = ?', [req.params.userId]);
   if (!entry) return res.status(404).json({ error: 'Watchlist entry not found' });
 
@@ -1236,10 +1269,8 @@ router.delete('/students/watchlist/:userId', (req, res) => {
   res.json({ success: true, message: 'Removed from watchlist' });
 });
 
-});
-
 // ── POST /faculty/students/anomalies/:id/resolve ──────────────────────────────
-router.post('/students/anomalies/:id/resolve', (req, res) => {
+router.post('/interns/anomalies/:id/resolve', (req, res) => {
   const { status, notes } = req.body;
   if (!status || !['resolved', 'dismissed', 'investigating'].includes(status)) {
     return res.status(400).json({ error: 'status must be one of: resolved, dismissed, investigating' });
@@ -1259,7 +1290,7 @@ router.post('/students/anomalies/:id/resolve', (req, res) => {
 });
 
 // ── GET /faculty/students/stats ───────────────────────────────────────────────
-router.get('/students/stats', (req, res) => {
+router.get('/interns/stats', (req, res) => {
   const { user_id, days = 30 } = req.query;
   const since = Date.now() - Number(days) * 24 * 3600 * 1000;
 
@@ -1316,6 +1347,8 @@ router.get('/students/stats', (req, res) => {
     netChange, dailyDelta, byAction, topRefs, spikes,
     actionLabels: SP_ACTIONS,
   });
+});
+
 });
 
 export default router;

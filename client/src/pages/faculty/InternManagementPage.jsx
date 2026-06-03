@@ -1,16 +1,16 @@
-// Skeleton — Phase 1: Overview cards + Student table + basic API wiring only
+// Skeleton — Phase 1: Overview cards + Intern table + basic API wiring only
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
-  getStudentOverview,
-  getStudents,
-  freezeStudent,
-  unfreezeStudent,
+  getInternOverview,
+  getInterns,
+  freezeIntern,
   getWatchlist,
-  getStudentAnomalies,
-  adjustStudent,
-  getStudentLedger,
-  getStudent,
+  getInternAnomalies,
+  adjustIntern,
+  getInternLedger,
+  getIntern,
+  unfreezeIntern,
   removeFromWatchlist,
   resolveAnomaly,
 } from '../../api/spManagement.js';
@@ -50,7 +50,7 @@ function LedgerTab({ searchParams, setSearchParams }) {
     if (!ledgerStudentId) return;
     setLoading(true);
     setError(null);
-    getStudentLedger(ledgerStudentId, {
+    getInternLedger(ledgerStudentId, {
       page: pg,
       action_type: filters.action || ledgerAction,
       from_date:   filters.from   || ledgerFrom,
@@ -74,7 +74,7 @@ function LedgerTab({ searchParams, setSearchParams }) {
   if (!ledgerStudentId) {
     return (
       <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e2e8f0', padding: '2.5rem', textAlign: 'center', color: '#94a3b8' }}>
-        👈 Select a student from the Students tab to view their ledger.
+        👈 Select an intern from the Interns tab to view their ledger.
       </div>
     );
   }
@@ -185,7 +185,7 @@ function AnomaliesTab({ searchParams, setSearchParams }) {
 
   const fetchAnomalies = (pg = 1, filters = {}) => {
     setLoading(true);
-    getStudentAnomalies({
+    getInternAnomalies({
       status:  filters.status  || anomalyStatus,
       severity: filters.severity || anomalySeverity,
       page: pg,
@@ -252,7 +252,7 @@ function AnomaliesTab({ searchParams, setSearchParams }) {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                {['Severity', 'Student', 'Type', 'Description', 'Status', 'Created', 'Actions'].map(h => (
+                {['Severity', 'Intern', 'Type', 'Description', 'Status', 'Created', 'Actions'].map(h => (
                   <th key={h} style={{ padding: '0.55rem 0.75rem', textAlign: 'left', color: '#64748b', fontWeight: 600 }}>{h}</th>
                 ))}
               </tr>
@@ -402,10 +402,10 @@ function WatchlistTab({ searchParams, setSearchParams }) {
           <option value="low">Low</option>
         </select>
         <input value={wlStudent} onChange={e => { setParam('wlStudent', e.target.value); fetchWatchlist(1, { student: e.target.value }); }}
-          placeholder="Filter by student name…"
+          placeholder="Filter by intern name…"
           style={{ padding: '0.4rem 0.6rem', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: '0.78rem', flex: '0 0 180px' }} />
         <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: '#94a3b8' }}>
-          {data ? `${data.total} student${data.total !== 1 ? 's' : ''} on watchlist` : ''}
+          {data ? `${data.total} intern${data.total !== 1 ? 's' : ''} on watchlist` : ''}
         </span>
       </div>
 
@@ -418,7 +418,7 @@ function WatchlistTab({ searchParams, setSearchParams }) {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                {['Priority', 'Student', 'Email', 'SP', 'Frozen', 'Reasons', 'Watched Since', 'Actions'].map(h => (
+                {['Priority', 'Intern', 'Email', 'SP', 'Frozen', 'Reasons', 'Watched Since', 'Actions'].map(h => (
                   <th key={h} style={{ padding: '0.55rem 0.75rem', textAlign: 'left', color: '#64748b', fontWeight: 600 }}>{h}</th>
                 ))}
               </tr>
@@ -492,22 +492,22 @@ function Modal({ onClose, title, children }) {
   );
 }
 
-function ExportModal({ students, onClose }) {
+function ExportModal({ interns, onClose }) {
   const [format, setFormat] = useState('csv');
   const [exporting, setExporting] = useState(false);
-  if (!students?.length) return null;
+  if (!interns?.length) return null;
   const handleExport = () => {
     setExporting(true);
     const timestamp = new Date().toISOString().slice(0, 10);
     let content, mimeType, filename;
     if (format === 'csv') {
       const rows = [['Name', 'Email', 'SP', 'Status', 'Frozen', 'Watchlist', 'Open Anomalies', 'Joined']];
-      students.forEach(s => rows.push([s.name || '', s.email || '', s.sp_points ?? s.reputation ?? '', s.is_frozen ? 'Frozen' : 'Active', s.is_frozen ? 'Yes' : 'No', s.watchlist_entries || 0, s.open_anomalies || 0, s.created_at ? new Date(s.created_at).toLocaleDateString() : '']));
+      interns.forEach(s => rows.push([s.name || '', s.email || '', s.sp_points ?? s.reputation ?? '', s.is_frozen ? 'Frozen' : 'Active', s.is_frozen ? 'Yes' : 'No', s.watchlist_entries || 0, s.open_anomalies || 0, s.created_at ? new Date(s.created_at).toLocaleDateString() : '']));
       content = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
-      mimeType = 'text/csv'; filename = `students_${timestamp}.csv`;
+      mimeType = 'text/csv'; filename = `interns_${timestamp}.csv`;
     } else {
-      content = JSON.stringify(students.map(s => ({ name: s.name, email: s.email, sp: s.sp_points ?? s.reputation, is_frozen: s.is_frozen, watchlist_entries: s.watchlist_entries || 0, open_anomalies: s.open_anomalies || 0, created_at: s.created_at })), null, 2);
-      mimeType = 'application/json'; filename = `students_${timestamp}.json`;
+      content = JSON.stringify(interns.map(s => ({ name: s.name, email: s.email, sp: s.sp_points ?? s.reputation, is_frozen: s.is_frozen, watchlist_entries: s.watchlist_entries || 0, open_anomalies: s.open_anomalies || 0, created_at: s.created_at })), null, 2);
+      mimeType = 'application/json'; filename = `interns_${timestamp}.json`;
     }
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
@@ -518,8 +518,8 @@ function ExportModal({ students, onClose }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ background: '#fff', borderRadius: 12, padding: '1.75rem', width: 360, boxShadow: '0 8px 24px rgba(0,0,0,0.15)' }}>
-        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.25rem' }}>📤 Export Students</h3>
-        <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '1.25rem' }}>Export {students.length} student{students.length !== 1 ? 's' : ''} to file.</p>
+        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.25rem' }}>📤 Export Interns</h3>
+        <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '1.25rem' }}>Export {interns.length} intern{interns.length !== 1 ? 's' : ''} to file.</p>
         <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.25rem' }}>
           {[['csv', 'CSV Spreadsheet'], ['json', 'JSON']].map(([v, label]) => (
             <button key={v} onClick={() => setFormat(v)} style={{ flex: 1, padding: '0.75rem', borderRadius: 8, border: `2px solid ${format === v ? '#3b82f6' : '#e2e8f0'}`, background: format === v ? '#eff6ff' : '#fff', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: format === v ? '#1d4ed8' : '#64748b' }}>{label}</button>
@@ -611,12 +611,12 @@ function AdjustModal({ target, onClose, onAction, adjusting, adjustError }) {
   );
 }
 
-export default function StudentManagementPage() {
+export default function InternManagementPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get('tab') || 'overview';
 
   const [overview, setOverview]       = useState(null);
-  const [students, setStudents]       = useState(null);
+  const [interns, setInterns]         = useState(null);
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState(null);
 
@@ -636,44 +636,44 @@ export default function StudentManagementPage() {
 
   // ── Fetch overview ──────────────────────────────────────────────────────────
   useEffect(() => {
-    getStudentOverview()
+    getInternOverview()
       .then(setOverview)
       .catch(() => {});
   }, []);
 
-  // ── Fetch student list ──────────────────────────────────────────────────────
-  const fetchStudents = (pg = 1, opts = {}) => {
+  // ── Fetch intern list ───────────────────────────────────────────────────────
+  const fetchInterns = (pg = 1, opts = {}) => {
     setLoading(true);
-    getStudents({
+    getInterns({
       page: pg,
       search: opts.search !== undefined ? opts.search : search,
       is_frozen: opts.frozen !== undefined ? opts.frozen : frozen,
       on_watchlist: opts.watchlistOnly !== undefined ? opts.watchlistOnly : watchlistOnly,
     })
       .then(data => {
-        setStudents(data.students);
+        setInterns(data.interns);
         setTotalPages(data.totalPages);
         setPage(data.page);
       })
-      .catch(() => setError('Failed to load students'))
+      .catch(() => setError('Failed to load interns'))
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchStudents(1); }, [frozen, watchlistOnly]);
+  useEffect(() => { fetchInterns(1); }, [frozen, watchlistOnly]);
 
-  const applyFilters = () => fetchStudents(1, { search, frozen, watchlistOnly });
-  const goPage = p => { setPage(p); fetchStudents(p); };
+  const applyFilters = () => fetchInterns(1, { search, frozen, watchlistOnly });
+  const goPage = p => { setPage(p); fetchInterns(p); };
 
   // ── Freeze / Unfreeze ────────────────────────────────────────────────────────
   const handleFreezeConfirm = () => {
     if (!freezeTarget || freezing) return;
     setFreezing(true);
-    const fn = freezeTarget.is_frozen ? unfreezeStudent : freezeStudent;
+    const fn = freezeTarget.is_frozen ? unfreezeIntern : freezeIntern;
     fn(freezeTarget.id)
       .then(() => {
         setFreezeTarget(null);
-        fetchStudents(page);
-        getStudentOverview().then(setOverview).catch(() => {});
+        fetchInterns(page);
+        getInternOverview().then(setOverview).catch(() => {});
       })
       .catch(() => setError('Action failed. Please try again.'))
       .finally(() => setFreezing(false));
@@ -684,13 +684,13 @@ export default function StudentManagementPage() {
     if (!adjustTarget || adjusting) return;
     setAdjusting(true);
     setAdjustError('');
-    adjustStudent(adjustTarget.id, { points_delta: delta, reason })
+    adjustIntern(adjustTarget.id, { points_delta: delta, reason })
       .then(() => {
         setAdjustTarget(null);
         setPendingDelta('');
         setPendingReason('');
-        fetchStudents(page);
-        getStudentOverview().then(setOverview).catch(() => {});
+        fetchInterns(page);
+        getInternOverview().then(setOverview).catch(() => {});
       })
       .catch(err => {
         setAdjustError(err?.message || 'Adjustment failed. Check limits and frozen status.');
@@ -723,10 +723,10 @@ export default function StudentManagementPage() {
     <div style={{ padding: '1.5rem' }}>
       {/* Page header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-        <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1e293b' }}>🎓 Student SP Management</h1>
+        <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1e293b' }}>🎓 Intern SP Management</h1>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <button onClick={() => setExportTarget(students || [])} style={{ padding: '0.35rem 0.85rem', borderRadius: 6, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', fontSize: '0.8rem', color: '#475569' }}>📤 Export</button>
-          {['overview', 'students', 'ledger', 'watchlist', 'anomalies'].map(t => (
+          <button onClick={() => setExportTarget(interns || [])} style={{ padding: '0.35rem 0.85rem', borderRadius: 6, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', fontSize: '0.8rem', color: '#475569' }}>📤 Export</button>
+          {['overview', 'interns', 'ledger', 'watchlist', 'anomalies'].map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
               padding: '0.35rem 0.85rem', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 500,
               background: tab === t ? '#3b82f6' : '#e2e8f0', color: tab === t ? '#fff' : '#475569',
@@ -740,17 +740,17 @@ export default function StudentManagementPage() {
         <div>
           {!overview ? <div style={{ color: '#94a3b8' }}>Loading overview…</div> : (
             <>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '0.875rem', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '0.875rem', marginBottom: '1rem' }}>
                 {[
-                  { label: 'Total Students', value: overview.totalStudents, icon: '👥', color: '#6366f1' },
-                  { label: 'Active (7d)', value: overview.activeLast7Days, icon: '🟢', color: '#10b981' },
-                  { label: 'Frozen', value: overview.frozenCount, icon: '❄️', color: '#06b6d4' },
-                  { label: 'On Watchlist', value: overview.onWatchlist, icon: '👁️', color: '#f59e0b' },
-                  { label: 'Open Anomalies', value: overview.openAnomalies, icon: '🚨', color: '#ef4444' },
+                  { label: 'Total Interns',   value: overview.totalInterns,   icon: '👥', color: '#6366f1' },
+                  { label: 'Active (7d)',    value: overview.activeLast7Days, icon: '🟢', color: '#10b981' },
+                  { label: 'Frozen',         value: overview.frozenCount,    icon: '❄️', color: '#06b6d4' },
+                  { label: 'On Watchlist',   value: overview.onWatchlist,    icon: '👁️', color: '#f59e0b' },
+                  { label: 'Open Anomalies', value: overview.openAnomalies,  icon: '🚨', color: '#ef4444' },
                 ].map(c => (
                   <div key={c.label} style={{ background: '#fff', borderRadius: 10, padding: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0' }}>
                     <div style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{c.icon}</div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: c.color }}>{overview[c.value] ?? c.value}</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: c.color }}>{c.value}</div>
                     <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{c.label}</div>
                   </div>
                 ))}
@@ -775,8 +775,8 @@ export default function StudentManagementPage() {
         </div>
       )}
 
-      {/* ── Students tab ─────────────────────────────────────────────────── */}
-      {tab === 'students' && (
+      {/* ── Interns tab ──────────────────────────────────────────────────── */}
+      {tab === 'interns' && (
         <div>
           {/* Filters */}
           <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
@@ -800,8 +800,8 @@ export default function StudentManagementPage() {
               <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>Loading…</div>
             ) : error ? (
               <div style={{ padding: '2rem', textAlign: 'center', color: '#ef4444' }}>❌ {error}</div>
-            ) : !students?.length ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No students found.</div>
+            ) : !interns?.length ? (
+              <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No interns found.</div>
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
                 <thead>
@@ -812,7 +812,7 @@ export default function StudentManagementPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {students.map(s => (
+                  {interns.map(s => (
                     <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                       <td style={{ padding: '0.6rem 0.75rem', fontWeight: 500, color: '#1e293b' }}>{s.name}</td>
                       <td style={{ padding: '0.6rem 0.75rem', color: '#64748b' }}>{s.email}</td>

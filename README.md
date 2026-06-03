@@ -68,10 +68,8 @@ Access the faculty dashboard at: http://localhost:5173/faculty
 
 Faculty account:
 
-- **Email:** `probe@faculty.test`
-- **Password:** `faculty`
-
-> Note: This account was created via direct DB upgrade from the `intern` role. After each server restart, the `probe@faculty.test` role reset is persisted in the SQLite DB file (`server/db/faqs.db`), so it survives server restarts.
+- **Email:** `faculty@admin.com`
+- **Password:** `faculty123`
 
 ### Faculty Modules Implemented
 
@@ -81,7 +79,7 @@ Faculty account:
 | 2 | Review Queue — pending questions with approve/reject | ✅ PASS |
 | 3 | Question Review — per-question detail + approve/reject | ✅ PASS |
 | 4 | Moderation — flag queue, resolve actions, stats | ✅ PASS |
-| 5 | Student SP Management — ledger, watchlist, anomalies, adjust, freeze | ✅ PASS |
+| 5 | Intern SP Management — ledger, watchlist, anomalies, adjust, freeze | ✅ PASS |
 | 6 | Tags Management — create, list, delete tags | ✅ PASS |
 | 7 | Audit Log — user action history | ✅ PASS |
 | 8 | Analytics — KPI, FAQ daily/monthly charts, status breakdown, throughput, moderation summary, SP distribution + leaderboard | ✅ PASS |
