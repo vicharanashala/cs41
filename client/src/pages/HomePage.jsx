@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ArrowRight, TrendingUp, Users, Zap, ChevronDown, Sparkles, FileText } from 'lucide-react';
+import { Search, ArrowRight, TrendingUp, Users, Zap, ChevronDown, Sparkles, FileText, Send } from 'lucide-react';
 import { officialFAQs, sections, categories, communityQuestions } from '../data/faqs.js';
 import { buildFAQIndex, searchFAQs, getSuggestions } from '../utils/nlp-search.js';
 import NocGenerator from '../components/NocGenerator.jsx';
@@ -20,6 +20,7 @@ export default function HomePage() {
   const [searchVal, setSearchVal] = useState(searchParams.get('q') || '');
   const [activeSection, setActiveSection] = useState('All');
   const [showPopup, setShowPopup] = useState(null); // 'ask' | 'insights' | null
+  const navigate = useNavigate();
   const [showNoc, setShowNoc] = useState(false);
 
   // Build NLP index on mount
@@ -122,6 +123,22 @@ export default function HomePage() {
             transition={{ delay: 0.5 }}
             className="flex items-center justify-center gap-4 mt-8"
           >
+            <motion.button
+              whileHover={{ scale: 1.03, y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => navigate('/submit')}
+              className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:border-accent/20 hover:bg-accent/5 transition-all cursor-pointer group"
+            >
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-primary flex items-center justify-center">
+                <Send size={16} className="text-black" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-semibold text-gray-100">Submit FAQ</p>
+                <p className="text-[11px] text-gray-500">Add to review queue</p>
+              </div>
+              <ArrowRight size={14} className="text-gray-600 group-hover:text-accent transition-colors ml-1" />
+            </motion.button>
+
             <motion.button
               whileHover={{ scale: 1.03, y: -2 }}
               whileTap={{ scale: 0.97 }}

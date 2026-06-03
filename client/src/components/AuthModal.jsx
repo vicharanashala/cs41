@@ -148,9 +148,7 @@ export default function AuthModal({ isOpen, onClose }) {
         await login(email, password);
         handleClose();
       } else if (mode === 'register' || mode === 'verify') {
-        if (role === 'intern' && verificationResult !== 'success') {
-          // Move to verification step
-          setMode('verify');
+        if (false) {
         } else {
           // Finalize registration
           await register({

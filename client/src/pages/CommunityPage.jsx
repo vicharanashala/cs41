@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { CustomDropdown } from '../components/CustomDropdown';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
@@ -11,7 +12,20 @@ import { buildFAQIndex, searchFAQs, detectDuplicate } from '../utils/nlp-search.
 import { LeaderboardWidget } from '../components/Leaderboard.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
-const CATEGORIES = ['About', 'NOC', 'Timing', 'Certificate', 'Work', 'Attendance', 'Interview', 'Rosetta', 'Phase 1', 'ViBe', 'Team Formation', 'General'];
+const CATEGORIES = [
+  { label: 'About',         value: 'General'          },
+  { label: 'NOC',           value: 'NOC'              },
+  { label: 'Timing',        value: 'Timing'           },
+  { label: 'Certificate',   value: 'Certificate'      },
+  { label: 'Work',          value: 'Work'             },
+  { label: 'Attendance',    value: 'Attendance'       },
+  { label: 'Interview',     value: 'Interview Prep'   },
+  { label: 'Rosetta',       value: 'Rosetta'          },
+  { label: 'Phase 1',       value: 'Phase 1'          },
+  { label: 'ViBe',          value: 'ViBe'             },
+  { label: 'Team Formation',value: 'Team Formation'   },
+  { label: 'General',       value: 'General'          },
+];
 const FAQ_PROMOTION_THRESHOLD = 10;
 const API = 'http://localhost:3001/api';
 
@@ -243,7 +257,7 @@ function QuestionCard({ question, onVote, onToggleAnswer, expanded, onSubmitAnsw
 
 function AskModal({ open, onClose, onSubmit }) {
   const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  
   const [category, setCategory] = useState('General');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -257,7 +271,7 @@ function AskModal({ open, onClose, onSubmit }) {
     if (val.trim().length >= 15) {
       debounceRef.current = setTimeout(() => {
         try {
-          const result = detectDuplicate(val, description);
+          const result = detectDuplicate(val, '');
           setDuplicates(result.isDuplicate ? result.matches : []);
         } catch { setDuplicates([]); }
       }, 500);
@@ -269,13 +283,12 @@ function AskModal({ open, onClose, onSubmit }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (title.trim().length < 15) { setError('Question must be at least 15 characters'); return; }
-    if (description.trim().length < 30) { setError('Please add more detail (at least 30 characters)'); return; }
     setError('');
     setSubmitting(true);
-    const ok = await onSubmit({ title: title.trim(), description: description.trim(), category });
+    const ok = await onSubmit({ title: title.trim(), category });
     setSubmitting(false);
     if (ok) {
-      setTitle(''); setDescription(''); setCategory('General'); setDuplicates([]);
+      setTitle(''); setCategory('General'); setDuplicates([]);
       onClose();
     }
   };
@@ -328,20 +341,14 @@ function AskModal({ open, onClose, onSubmit }) {
           </div>
           <div>
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5 block">Category</label>
-            <select className="input-field" value={category} onChange={e => setCategory(e.target.value)}>
-              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5 block">More Details *</label>
-            <textarea
-              className="input-field min-h-20 resize-none"
-              placeholder="Add context — what you've already looked into, why you're asking…"
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              required
+            <CustomDropdown
+              value={category}
+              options={CATEGORIES}
+              onChange={setCategory}
+              placeholder="Select a category…"
             />
           </div>
+
           {error && (
             <div className="flex items-center gap-2 text-xs text-warn bg-warn/10 px-3 py-2 rounded-lg">
               <AlertCircle size={12} /> {error}
@@ -392,7 +399,10 @@ export default function CommunityPage() {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (filter !== 'all') params.set('category', filter);
+      if (filter !== 'all') {
+        const cat = CATEGORIES.find(c => c.label === filter);
+        params.set('category', cat ? cat.value : filter);
+      }
       params.set('sort', sort);
       const res = await fetch(`${API}/community/questions?${params}`);
       const data = await res.json();
@@ -486,7 +496,7 @@ export default function CommunityPage() {
     }
   };
 
-  const handleSubmitQuestion = async ({ title, description, category }) => {
+  const handleSubmitQuestion = async ({ title, category }) => {
     if (!user) {
       setError('You must be logged in to ask a question.');
       return false;
@@ -502,7 +512,7 @@ export default function CommunityPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}` 
         },
-        body: JSON.stringify({ title, description, category }),
+        body: JSON.stringify({ title, category }),
       });
       if (!res.ok) throw new Error('Failed');
       await fetchQuestions(); // Refresh list
@@ -598,9 +608,9 @@ export default function CommunityPage() {
             All
           </button>
           {CATEGORIES.map(c => (
-            <button key={c} onClick={() => setFilter(c)}
-              className={`px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${filter === c ? 'bg-white/[0.08] border-white/[0.12] text-gray-200' : 'text-gray-500'}`}>
-              {c}
+            <button key={c.label} onClick={() => setFilter(c.label)}
+              className={`px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${filter === c.label ? 'bg-white/[0.08] border-white/[0.12] text-gray-200' : 'text-gray-500'}`}>
+              {c.label}
             </button>
           ))}
         </div>

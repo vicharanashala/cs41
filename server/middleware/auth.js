@@ -18,6 +18,30 @@ export function authenticate(req, res, next) {
   }
 }
 
+/**
+ * Middleware: require an authenticated user with 'intern' role.
+ * Blocks faculty from SP-earning endpoints.
+ */
+export function requireIntern(req, res, next) {
+  if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+  if (req.user.role === 'faculty') {
+    return res.status(403).json({ error: 'Faculty cannot perform this action' });
+  }
+  next();
+}
+
+/**
+ * Middleware: require Faculty role.
+ * All /api/faculty/* routes are protected by this.
+ */
+export function requireFaculty(req, res, next) {
+  if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+  if (req.user.role !== 'faculty') {
+    return res.status(403).json({ error: 'Faculty access required' });
+  }
+  next();
+}
+
 export function optionalAuth(req, res, next) {
   const header = req.headers.authorization;
   if (header && header.startsWith('Bearer ')) {

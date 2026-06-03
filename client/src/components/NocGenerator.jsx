@@ -4,6 +4,7 @@ import {
   FileText, X, Download, Printer, Calendar, Building2, User, GraduationCap,
   CheckCircle, AlertCircle, Info,
 } from 'lucide-react';
+import { CustomDropdown } from './CustomDropdown';
 
 // ─── NOC Auto-Generator ───────────────────────────────────────────────────
 // Generates a printable No Objection Certificate for Vicharanashala
@@ -197,13 +198,18 @@ export default function NocGenerator({ open, onClose }) {
               </div>
               <div>
                 <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5 block">Designation</label>
-                <select className="input-field" value={form.hodDesignation} onChange={e => update('hodDesignation', e.target.value)}>
-                  <option value="HOD">Head of Department</option>
-                  <option value="Principal">Principal</option>
-                  <option value="Dean">Dean</option>
-                  <option value="Director">Director</option>
-                  <option value="T&P Officer">Training & Placement Officer</option>
-                </select>
+                <CustomDropdown
+                  value={form.hodDesignation}
+                  options={[
+                    { value: 'HOD', label: 'Head of Department' },
+                    { value: 'Principal', label: 'Principal' },
+                    { value: 'Dean', label: 'Dean' },
+                    { value: 'Director', label: 'Director' },
+                    { value: "T&P Officer", label: 'Training & Placement Officer' },
+                  ]}
+                  onChange={(val) => update('hodDesignation', val)}
+                  placeholder="Select designation…"
+                />
               </div>
             </div>
 

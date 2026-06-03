@@ -64,6 +64,11 @@ export async function initDb() {
       created_at TEXT DEFAULT (datetime('now')),
       FOREIGN KEY (user_id) REFERENCES users(id)
     );
+
+    CREATE TABLE IF NOT EXISTS AppliedMigrations (
+      name TEXT PRIMARY KEY,
+      applied_at INTEGER NOT NULL
+    );
   `);
 
   // Migration: add is_faq column if it doesn't exist
