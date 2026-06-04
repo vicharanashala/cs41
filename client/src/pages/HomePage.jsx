@@ -18,7 +18,7 @@ const fadeUp = {
 export default function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchVal, setSearchVal] = useState(searchParams.get('q') || '');
-  const [activeSection, setActiveSection] = useState('All');
+  const [activeSection, setActiveSection] = useState(searchParams.get('filter') || 'All');
   const [showPopup, setShowPopup] = useState(null); // 'ask' | 'insights' | null
   const navigate = useNavigate();
   const [showNoc, setShowNoc] = useState(false);

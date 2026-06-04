@@ -1,4 +1,10 @@
 import express from 'express';
+// Global handler to catch unhandled promise rejections and print their origin.
+// Remove this once the codebase is fully async-safe.
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[FATAL] Unhandled Promise Rejection:', reason);
+  if (reason instanceof Error) console.error(reason.stack);
+});
 import cors from 'cors';
 import { initDb, saveDb } from './db/database.js';
 import { runMigrations } from './utils/migrate.js';
@@ -21,7 +27,9 @@ app.use('/api/faculty/settings', authenticate, requireFaculty, settingsRouter);
 
 app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 
-const persistAndExit = () => { saveDb(); };
+const persistAndExit = () => {
+  try { saveDb(); } catch (_) {}
+};
 process.on('exit', persistAndExit);
 process.on('SIGTERM', () => { saveDb(); process.exit(0); });
 process.on('SIGINT',  () => { saveDb(); process.exit(0); });

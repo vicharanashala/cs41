@@ -120,18 +120,10 @@ export function LeaderboardWidget() {
             <Trophy size={14} className="text-primary" />
             Top Contributors
           </h3>
-          {users.length > 5 && (
-            <button
-              onClick={() => setShowFull(true)}
-              className="text-[10px] text-primary/70 hover:text-primary transition-colors cursor-pointer"
-            >
-              View all →
-            </button>
-          )}
         </div>
 
         <div className="flex flex-col gap-1">
-          {users.slice(0, 5).map((u, i) => (
+          {users.slice(0, 2).map((u, i) => (
             <ContributorRow key={u.id || i} user={u} rank={i} compact />
           ))}
         </div>
@@ -201,9 +193,9 @@ function LeaderboardModal({ users, onClose }) {
           ))}
         </div>
 
-        {/* Full list */}
+        {/* Priya & Rahul only */}
         <div className="flex flex-col gap-2">
-          {users.map((u, i) => (
+          {users.slice(0, 2).map((u, i) => (
             <ContributorRow key={u.id || i} user={u} rank={i} compact={false} />
           ))}
         </div>

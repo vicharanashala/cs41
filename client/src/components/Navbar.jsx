@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Menu, X, Bot, Zap, Sparkles, ArrowRight, User, LogOut } from 'lucide-react';
+import Logo from './Logo.svg';
 import { officialFAQs } from '../data/faqs.js';
 import { buildFAQIndex, searchFAQs } from '../utils/nlp-search.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -87,18 +88,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-6">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 flex-shrink-0">
-          <div className="relative">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <circle cx="16" cy="16" r="15" stroke="#00d4ff" strokeWidth="1.5" opacity="0.5"/>
-              <circle cx="16" cy="16" r="9" stroke="#00d4ff" strokeWidth="1.5" opacity="0.3"/>
-              <circle cx="16" cy="16" r="4" fill="#00d4ff"/>
-              <line x1="16" y1="1" x2="16" y2="7" stroke="#00d4ff" strokeWidth="1.5" opacity="0.8"/>
-              <line x1="16" y1="25" x2="16" y2="31" stroke="#00d4ff" strokeWidth="1.5" opacity="0.8"/>
-              <line x1="1" y1="16" x2="7" y2="16" stroke="#00d4ff" strokeWidth="1.5" opacity="0.8"/>
-              <line x1="25" y1="16" x2="31" y2="16" stroke="#00d4ff" strokeWidth="1.5" opacity="0.8"/>
-            </svg>
-            <div className="absolute inset-0 rounded-full bg-primary/20 blur-md -z-10" />
-          </div>
+          <img src={Logo} alt="CrowdSourceFAQ logo" className="h-9 w-auto object-contain" />
           <span className="font-outfit font-bold text-lg text-white hidden sm:block">
             CrowdSource<span className="text-primary">FAQs</span>
           </span>

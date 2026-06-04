@@ -7,6 +7,13 @@ const sidebarLinks = [
   { to: '/insights',   label: 'Crowd Insights',  icon: BarChart2 },
 ];
 
+const QUICK_LINKS = [
+  { label: 'About VINS',           filter: 'About'       },
+  { label: 'NOC Guide',            filter: 'NOC'          },
+  { label: 'Attendance Rules',     filter: 'Attendance'   },
+  { label: 'Certificate Process',  filter: 'Certificate'  },
+];
+
 export default function Sidebar() {
   const location = useLocation();
 
@@ -38,10 +45,14 @@ export default function Sidebar() {
       <div className="mt-8 px-6">
         <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-600 mb-3">Quick Links</p>
         <div className="flex flex-col gap-1">
-          {['About VINS', 'NOC Guide', 'Attendance Rules', 'Certificate Process'].map(l => (
-            <button key={l} className="text-left px-3 py-2 text-xs text-gray-500 hover:text-gray-200 hover:bg-white/[0.03] rounded-lg transition-all">
-              {l}
-            </button>
+          {QUICK_LINKS.map(({ label, filter }) => (
+            <Link
+              key={filter}
+              to={`/?filter=${encodeURIComponent(filter)}`}
+              className="text-left px-3 py-2 text-xs text-gray-500 hover:text-gray-200 hover:bg-white/[0.03] rounded-lg transition-all cursor-pointer"
+            >
+              {label}
+            </Link>
           ))}
         </div>
       </div>

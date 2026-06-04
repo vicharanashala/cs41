@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { CustomDropdown } from '../components/CustomDropdown';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -377,6 +378,7 @@ export default function CommunityPage() {
   const { user, token } = useAuth();
   const [questions, setQuestions] = useState([]);
   const [filter, setFilter] = useState('all');
+  const [searchParams] = useSearchParams();
   const [sort, setSort] = useState('newest');
   const [showAsk, setShowAsk] = useState(false);
   const [expanded, setExpanded] = useState({});
@@ -384,6 +386,12 @@ export default function CommunityPage() {
   const [loadingAnswers, setLoadingAnswers] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Read filter from URL params on mount (for Quick Links from sidebar)
+  useEffect(() => {
+    const f = searchParams.get('filter');
+    if (f) setFilter(f);
+  }, []);
 
   // Build NLP index for duplicate detection
   useEffect(() => {
@@ -502,7 +510,7 @@ export default function CommunityPage() {
       return false;
     }
     try {
-      const res = await fetch(`${API}/questions`, {
+      const res = await fetch(`${API}/community/questions`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -510,7 +518,10 @@ export default function CommunityPage() {
         },
         body: JSON.stringify({ title, category }),
       });
-      if (!res.ok) throw new Error('Failed');
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed');
+      }
       await fetchQuestions(); // Refresh list
       return true;
     } catch {
