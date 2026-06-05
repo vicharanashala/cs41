@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ArrowRight, TrendingUp, Users, Zap, ChevronDown, Sparkles, FileText, Send } from 'lucide-react';
+import axios from 'axios';
 import { officialFAQs, sections, categories, communityQuestions } from '../data/faqs.js';
 import { buildFAQIndex, searchFAQs, getSuggestions } from '../utils/nlp-search.js';
 import NocGenerator from '../components/NocGenerator.jsx';
@@ -22,11 +23,32 @@ export default function HomePage() {
   const [showPopup, setShowPopup] = useState(null); // 'ask' | 'insights' | null
   const navigate = useNavigate();
   const [showNoc, setShowNoc] = useState(false);
+  const [publishedFAQs, setPublishedFAQs] = useState([]);
 
-  // Build NLP index on mount
+  // Build NLP index on mount (official FAQs only)
   useEffect(() => {
     buildFAQIndex(officialFAQs.map(f => ({ ...f, source: 'official' })));
   }, []);
+
+  // Fetch published community FAQs from DB and merge with official list
+  useEffect(() => {
+    axios.get('/api/faqs/published')
+      .then(r => r.data.faqs || [])
+      .then(dbFaqs => {
+        setPublishedFAQs(dbFaqs.map(f => ({ ...f, isOfficial: false })));
+      })
+      .catch(() => {}); // silently ignore — official FAQs still show
+  }, []);
+
+  // All categories = hardcoded core categories + community-only categories discovered from DB
+  const allCategories = useMemo(() => {
+    const officialCats = new Set(officialFAQs.map(f => f.category));
+    const communityCats = new Set(publishedFAQs.map(f => f.category));
+    const merged = [...new Set([...officialCats, ...communityCats])];
+    // Put 'All' first, then sort the rest alphabetically
+    merged.sort((a, b) => a === 'All' ? -1 : b === 'All' ? 1 : a.localeCompare(b));
+    return merged;
+  }, [publishedFAQs]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -50,11 +72,12 @@ export default function HomePage() {
     if (nlpResults) {
       return nlpResults.map(r => ({ ...r.faq, _nlpScore: r.score, _confidence: r.confidence }));
     }
-    // Otherwise just filter by category
-    return officialFAQs.filter(faq => {
+    // Merge official FAQs + published community FAQs, then filter by category
+    const all = [...officialFAQs, ...publishedFAQs];
+    return all.filter(faq => {
       return activeSection === 'All' || faq.category === activeSection;
     });
-  }, [nlpResults, activeSection]);
+  }, [nlpResults, activeSection, publishedFAQs]);
 
   const trendingFAQs = [...officialFAQs].sort((a, b) => b.votes - a.votes).slice(0, 5);
   const recentActivity = communityQuestions.slice(0, 3);
@@ -219,7 +242,7 @@ export default function HomePage() {
           <div className="lg:col-span-2 flex flex-col gap-6">
             {/* Section filter */}
             <motion.div variants={stagger} initial="initial" animate="animate" className="flex flex-wrap gap-2">
-              {categories.map(cat => (
+              {allCategories.map(cat => (
                 <button
                   key={cat}
                   onClick={() => setActiveSection(cat)}
@@ -286,18 +309,26 @@ export default function HomePage() {
                   )}
                 </div>
               )}
-              {filtered.map(faq => (
+              {filtered.map(faq => {
+                // Official FAQs have 'faq-X' ids and live under /faq/; DB FAQs have UUIDs under /questions/
+                const href = faq.id.startsWith('faq-') ? `/faq/${faq.id}` : `/questions/${faq.id}`;
+                const answerText = faq.a || faq.description || '';
+                return (
                 <motion.div key={faq.id} variants={fadeUp}>
-                  <Link to={`/faq/${faq.id}`} className="glass rounded-xl p-5 block hover:bg-white/[0.065] transition-all group">
+                  <Link to={href} className="glass rounded-xl p-5 block hover:bg-white/[0.065] transition-all group">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <span className="text-[10px] font-semibold uppercase tracking-wider text-primary/70 bg-primary/8 px-2 py-0.5 rounded-full">
                             {faq.category}
                           </span>
-                          {faq.isOfficial && (
+                          {faq.isOfficial ? (
                             <span className="text-[10px] font-semibold uppercase tracking-wider text-accent/80 bg-accent/8 px-2 py-0.5 rounded-full">
                               ✓ Official
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-secondary/80 bg-secondary/8 px-2 py-0.5 rounded-full">
+                              🟢 Community
                             </span>
                           )}
                           {faq._confidence && (
@@ -318,21 +349,22 @@ export default function HomePage() {
                           {faq.q}
                         </h3>
                         <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed">
-                          {faq.a.replace(/\n[A-Z].*/g, '').slice(0, 140)}…
+                          {answerText.replace(/\n[A-Z].*/g, '').slice(0, 140)}…
                         </p>
                       </div>
                       {!faq.isOfficial && (
                         <div className="flex flex-col items-center gap-1 text-center flex-shrink-0">
-                          <span className="text-sm font-bold text-gray-300">{faq.votes.toLocaleString()}</span>
+                          <span className="text-sm font-bold text-gray-300">{(faq.votes || 0).toLocaleString()}</span>
                           <span className="text-[10px] text-gray-600">votes</span>
-                          <span className="text-sm font-bold text-gray-400 mt-1">{faq.views.toLocaleString()}</span>
+                          <span className="text-sm font-bold text-gray-400 mt-1">{(faq.views || 0).toLocaleString()}</span>
                           <span className="text-[10px] text-gray-600">views</span>
                         </div>
                       )}
                     </div>
                   </Link>
                 </motion.div>
-              ))}
+                );
+              })}
             </motion.div>
           </div>
 

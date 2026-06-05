@@ -15,8 +15,8 @@ import {
   resolveAnomaly,
 } from '../../api/spManagement.js';
 
-const STATUS_COLORS = { open: '#ef4444', resolved: '#10b981', dismissed: '#64748b', investigating: '#f59e0b' };
-const PRIORITY_COLORS = { low: '#94a3b8', normal: '#3b82f6', high: '#f59e0b', critical: '#ef4444' };
+const STATUS_COLORS = { open: '#ef4444', resolved: '#10b981', dismissed: '#1e293b', investigating: '#f59e0b' };
+const PRIORITY_COLORS = { low: '#1e293b', normal: '#3b82f6', high: '#f59e0b', critical: '#ef4444' };
 
 function timeAgo(iso) {
   if (!iso) return '—';
@@ -73,7 +73,7 @@ function LedgerTab({ searchParams, setSearchParams }) {
 
   if (!ledgerStudentId) {
     return (
-      <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e2e8f0', padding: '2.5rem', textAlign: 'center', color: '#94a3b8' }}>
+      <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e2e8f0', padding: '2.5rem', textAlign: 'center', color: '#1e293b' }}>
         👈 Select an intern from the Interns tab to view their ledger.
       </div>
     );
@@ -93,20 +93,20 @@ function LedgerTab({ searchParams, setSearchParams }) {
         </select>
         <input type="date" value={ledgerFrom} onChange={e => { setLedgerParam('ledgerFrom', e.target.value); fetchLedger(1, { from: e.target.value }); }}
           style={{ padding: '0.4rem 0.5rem', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: '0.78rem' }} />
-        <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>→</span>
+        <span style={{ color: '#1e293b', fontSize: '0.75rem' }}>→</span>
         <input type="date" value={ledgerTo} onChange={e => { setLedgerParam('ledgerTo', e.target.value); fetchLedger(1, { to: e.target.value }); }}
           style={{ padding: '0.4rem 0.5rem', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: '0.78rem' }} />
         {(ledgerAction || ledgerFrom || ledgerTo) && (
           <button onClick={() => { setLedgerParam('ledgerAction', ''); setLedgerParam('ledgerFrom', ''); setLedgerParam('ledgerTo', ''); fetchLedger(1, { action: '', from: '', to: '' }); }}
-            style={{ padding: '0.4rem 0.75rem', background: '#f1f5f9', border: 'none', borderRadius: 6, fontSize: '0.75rem', cursor: 'pointer', color: '#64748b' }}>Clear</button>
+            style={{ padding: '0.4rem 0.75rem', background: '#1e293b', border: 'none', borderRadius: 6, fontSize: '0.75rem', cursor: 'pointer', color: '#94a3b8' }}>Clear</button>
         )}
         <button onClick={() => { setSearchParams(p => { const n = new URLSearchParams(p); n.delete('ledgerStudent'); return n; }); }}
-          style={{ marginLeft: 'auto', padding: '0.4rem 0.75rem', background: '#f1f5f9', border: 'none', borderRadius: 6, fontSize: '0.75rem', cursor: 'pointer', color: '#64748b' }}>← Back to list</button>
+          style={{ marginLeft: 'auto', padding: '0.4rem 0.75rem', background: '#1e293b', border: 'none', borderRadius: 6, fontSize: '0.75rem', cursor: 'pointer', color: '#94a3b8' }}>← Back to list</button>
       </div>
 
       {/* Running total banner */}
       {ledger && (
-        <div style={{ marginBottom: '0.75rem', padding: '0.6rem 1rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: '0.8rem', color: '#64748b' }}>
+        <div style={{ marginBottom: '0.75rem', padding: '0.6rem 1rem', background: '#1e293b', border: '1px solid #334155', borderRadius: 8, fontSize: '0.8rem', color: '#94a3b8' }}>
           Net SP change: <strong style={{ color: ledger.runningTotal >= 0 ? '#10b981' : '#ef4444' }}>{ledger.runningTotal >= 0 ? '+' : ''}{ledger.runningTotal}</strong>
           &nbsp;&nbsp;|&nbsp;&nbsp;Showing {ledger.entries?.length} of {ledger.total} entries
         </div>
@@ -114,33 +114,37 @@ function LedgerTab({ searchParams, setSearchParams }) {
 
       {/* Table */}
       <div style={{ background: '#fff', borderRadius: 10, boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', overflow: 'auto' }}>
-        {loading ? <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>Loading ledger…</div>
-         : error ? <div style={{ padding: '2rem', textAlign: 'center', color: '#ef4444' }}>❌ {error}</div>
-         : !ledger?.entries?.length ? <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No ledger entries found.</div>
+        {loading ? <div style={{ padding: '2rem', textAlign: 'center', color: '#1e293b' }}>Loading ledger…</div>
+         : error ? (
+           <div style={{ padding: '2rem', textAlign: 'center', color: '#ef4444' }}>
+             <div style={{ marginBottom: '0.75rem' }}>❌ {error}</div>
+             <button onClick={() => fetchLedger(1)} style={{ padding: '0.4rem 1rem', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: '0.8rem' }}>Retry</button>
+           </div>
+         ) : !ledger?.entries?.length ? <div style={{ padding: '2rem', textAlign: 'center', color: '#1e293b' }}>No ledger entries found.</div>
          : (
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                 {['Time', 'Action', 'SP Δ', 'Balance After', 'Ref', 'Description'].map(h => (
-                  <th key={h} style={{ padding: '0.55rem 0.75rem', textAlign: 'left', color: '#64748b', fontWeight: 600 }}>{h}</th>
+                  <th key={h} style={{ padding: '0.55rem 0.75rem', textAlign: 'left', color: '#1e293b', fontWeight: 600 }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {ledger.entries.map(e => {
-                const actionCfg = SP_ACTIONS[e.action_type] || { label: e.action_type, color: '#64748b' };
+                const actionCfg = SP_ACTIONS[e.action_type] || { label: e.action_type, color: '#1e293b' };
                 return (
                   <tr key={e.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '0.55rem 0.75rem', color: '#64748b', whiteSpace: 'nowrap' }}>{timeAgo(e.created_at)}</td>
+                    <td style={{ padding: '0.55rem 0.75rem', color: '#1e293b', whiteSpace: 'nowrap' }}>{timeAgo(e.created_at)}</td>
                     <td style={{ padding: '0.55rem 0.75rem' }}>
                       <span style={{ background: actionCfg.color + '18', color: actionCfg.color, padding: '0.15rem 0.5rem', borderRadius: 10, fontSize: '0.7rem', fontWeight: 500 }}>{actionCfg.label}</span>
                     </td>
                     <td style={{ padding: '0.55rem 0.75rem', fontWeight: 700, color: e.points > 0 ? '#10b981' : '#ef4444' }}>
                       {e.points > 0 ? `+${e.points}` : e.points}
                     </td>
-                    <td style={{ padding: '0.55rem 0.75rem', color: '#334155' }}>{e.balance_after}</td>
-                    <td style={{ padding: '0.55rem 0.75rem', color: '#94a3b8', fontSize: '0.72rem' }}>{e.reference_id ? `${e.reference_type}#${e.reference_id}` : '—'}</td>
-                    <td style={{ padding: '0.55rem 0.75rem', color: '#475569', maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.description || '—'}</td>
+                    <td style={{ padding: '0.55rem 0.75rem', color: '#1e293b' }}>{e.balance_after}</td>
+                    <td style={{ padding: '0.55rem 0.75rem', color: '#1e293b', fontSize: '0.72rem' }}>{e.reference_id ? `${e.reference_type}#${e.reference_id}` : '—'}</td>
+                    <td style={{ padding: '0.55rem 0.75rem', color: '#1e293b', maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.description || '—'}</td>
                   </tr>
                 );
               })}
@@ -154,7 +158,7 @@ function LedgerTab({ searchParams, setSearchParams }) {
         <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem' }}>
           <button disabled={ledgerPage <= 1} onClick={() => goPage(ledgerPage - 1)}
             style={{ padding: '0.35rem 0.75rem', border: '1px solid #e2e8f0', borderRadius: 6, background: '#fff', cursor: ledgerPage <= 1 ? 'not-allowed' : 'pointer', opacity: ledgerPage <= 1 ? 0.5 : 1 }}>‹ Prev</button>
-          <span style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', color: '#64748b' }}>Page {ledgerPage} of {ledger.totalPages}</span>
+          <span style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', color: '#1e293b' }}>Page {ledgerPage} of {ledger.totalPages}</span>
           <button disabled={ledgerPage >= ledger.totalPages} onClick={() => goPage(ledgerPage + 1)}
             style={{ padding: '0.35rem 0.75rem', border: '1px solid #e2e8f0', borderRadius: 6, background: '#fff', cursor: ledgerPage >= ledger.totalPages ? 'not-allowed' : 'pointer', opacity: ledgerPage >= ledger.totalPages ? 0.5 : 1 }}>Next ›</button>
         </div>
@@ -164,12 +168,12 @@ function LedgerTab({ searchParams, setSearchParams }) {
 }
 
 // ── Anomalies Tab ────────────────────────────────────────────────────────────
-const SEVERITY_COLORS = { critical: '#ef4444', high: '#f59e0b', medium: '#3b82f6', low: '#94a3b8' };
+const SEVERITY_COLORS = { critical: '#ef4444', high: '#f59e0b', medium: '#3b82f6', low: '#1e293b' };
 const STATUS_STYLES   = {
   open:         { bg: '#fef2f2', color: '#dc2626' },
   investigating:{ bg: '#fffbeb', color: '#d97706' },
   resolved:     { bg: '#f0fdf4', color: '#16a34a' },
-  dismissed:    { bg: '#f8fafc', color: '#64748b' },
+  dismissed:    { bg: '#f8fafc', color: '#1e293b' },
 };
 
 function AnomaliesTab({ searchParams, setSearchParams }) {
@@ -238,28 +242,32 @@ function AnomaliesTab({ searchParams, setSearchParams }) {
           <option value="medium">Medium</option>
           <option value="low">Low</option>
         </select>
-        <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: '#94a3b8' }}>
+        <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: '#1e293b' }}>
           {data ? `${data.total} event${data.total !== 1 ? 's' : ''}` : ''}
         </span>
       </div>
 
       {/* Table */}
       <div style={{ background: '#fff', borderRadius: 10, boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', overflow: 'auto' }}>
-        {loading ? <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>Loading…</div>
-         : error ? <div style={{ padding: '2rem', textAlign: 'center', color: '#ef4444' }}>❌ {error}</div>
-         : !data?.events?.length ? <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No anomaly events found.</div>
+        {loading ? <div style={{ padding: '2rem', textAlign: 'center', color: '#1e293b' }}>Loading…</div>
+         : error ? (
+           <div style={{ padding: '2rem', textAlign: 'center', color: '#ef4444' }}>
+             <div style={{ marginBottom: '0.75rem' }}>❌ {error}</div>
+             <button onClick={() => fetchAnomalies(1)} style={{ padding: '0.4rem 1rem', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: '0.8rem' }}>Retry</button>
+           </div>
+         ) : !data?.events?.length ? <div style={{ padding: '2rem', textAlign: 'center', color: '#1e293b' }}>No anomaly events found.</div>
          : (
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                 {['Severity', 'Intern', 'Type', 'Description', 'Status', 'Created', 'Actions'].map(h => (
-                  <th key={h} style={{ padding: '0.55rem 0.75rem', textAlign: 'left', color: '#64748b', fontWeight: 600 }}>{h}</th>
+                  <th key={h} style={{ padding: '0.55rem 0.75rem', textAlign: 'left', color: '#1e293b', fontWeight: 600 }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {data.events.map(ev => {
-                const sevColor = SEVERITY_COLORS[ev.severity] || '#94a3b8';
+                const sevColor = SEVERITY_COLORS[ev.severity] || '#1e293b';
                 const sty = STATUS_STYLES[ev.status] || STATUS_STYLES.open;
                 const ri  = resolveInput[ev.id] || {};
                 return (
@@ -270,12 +278,12 @@ function AnomaliesTab({ searchParams, setSearchParams }) {
                       </span>
                     </td>
                     <td style={{ padding: '0.55rem 0.75rem', fontWeight: 500, color: '#1e293b', maxWidth: 130, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.student_name}</td>
-                    <td style={{ padding: '0.55rem 0.75rem', color: '#475569', fontSize: '0.75rem' }}>{ev.anomaly_type}</td>
-                    <td style={{ padding: '0.55rem 0.75rem', color: '#475569', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.description || '—'}</td>
+                    <td style={{ padding: '0.55rem 0.75rem', color: '#1e293b', fontSize: '0.75rem' }}>{ev.anomaly_type}</td>
+                    <td style={{ padding: '0.55rem 0.75rem', color: '#1e293b', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.description || '—'}</td>
                     <td style={{ padding: '0.55rem 0.75rem' }}>
                       <span style={{ background: sty.bg, color: sty.color, padding: '0.15rem 0.5rem', borderRadius: 10, fontSize: '0.7rem', fontWeight: 500 }}>{ev.status}</span>
                     </td>
-                    <td style={{ padding: '0.55rem 0.75rem', color: '#94a3b8', whiteSpace: 'nowrap' }}>{timeAgo(ev.created_at)}</td>
+                    <td style={{ padding: '0.55rem 0.75rem', color: '#1e293b', whiteSpace: 'nowrap' }}>{timeAgo(ev.created_at)}</td>
                     <td style={{ padding: '0.55rem 0.75rem', whiteSpace: 'nowrap' }}>
                       {ev.status === 'open' || ev.status === 'investigating' ? (
                         resolveInput[ev.id] ? (
@@ -303,7 +311,7 @@ function AnomaliesTab({ searchParams, setSearchParams }) {
                             Resolve
                           </button>
                         )
-                      ) : <span style={{ color: '#94a3b8', fontSize: '0.72rem' }}>—</span>}
+                      ) : <span style={{ color: '#1e293b', fontSize: '0.72rem' }}>—</span>}
                     </td>
                   </tr>
                 );
@@ -318,7 +326,7 @@ function AnomaliesTab({ searchParams, setSearchParams }) {
         <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem' }}>
           <button disabled={anomalyPage <= 1} onClick={() => goPage(anomalyPage - 1)}
             style={{ padding: '0.35rem 0.75rem', border: '1px solid #e2e8f0', borderRadius: 6, background: '#fff', cursor: anomalyPage <= 1 ? 'not-allowed' : 'pointer', opacity: anomalyPage <= 1 ? 0.5 : 1 }}>‹ Prev</button>
-          <span style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', color: '#64748b' }}>Page {anomalyPage} of {data.totalPages}</span>
+          <span style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', color: '#1e293b' }}>Page {anomalyPage} of {data.totalPages}</span>
           <button disabled={anomalyPage >= data.totalPages} onClick={() => goPage(anomalyPage + 1)}
             style={{ padding: '0.35rem 0.75rem', border: '1px solid #e2e8f0', borderRadius: 6, background: '#fff', cursor: anomalyPage >= data.total.totalPages ? 'not-allowed' : 'pointer', opacity: anomalyPage >= data.totalPages ? 0.5 : 1 }}>Next ›</button>
         </div>
@@ -329,7 +337,7 @@ function AnomaliesTab({ searchParams, setSearchParams }) {
 
 // ── Watchlist Tab ───────────────────────────────────────────────────────────
 const PRIORITY_BADGE = {
-  low:    { bg: '#f1f5f9', color: '#64748b' },
+  low:    { bg: '#f1f5f9', color: '#1e293b' },
   normal: { bg: '#dbeafe', color: '#1d4ed8' },
   high:   { bg: '#fef3c7', color: '#d97706' },
   urgent: { bg: '#fef2f2', color: '#dc2626' },
@@ -404,22 +412,26 @@ function WatchlistTab({ searchParams, setSearchParams }) {
         <input value={wlStudent} onChange={e => { setParam('wlStudent', e.target.value); fetchWatchlist(1, { student: e.target.value }); }}
           placeholder="Filter by intern name…"
           style={{ padding: '0.4rem 0.6rem', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: '0.78rem', flex: '0 0 180px' }} />
-        <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: '#94a3b8' }}>
+        <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: '#1e293b' }}>
           {data ? `${data.total} intern${data.total !== 1 ? 's' : ''} on watchlist` : ''}
         </span>
       </div>
 
       {/* Table */}
       <div style={{ background: '#fff', borderRadius: 10, boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', overflow: 'auto' }}>
-        {loading ? <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>Loading watchlist…</div>
-         : error ? <div style={{ padding: '2rem', textAlign: 'center', color: '#ef4444' }}>❌ {error}</div>
-         : !data?.students?.length ? <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>Watchlist is empty.</div>
+        {loading ? <div style={{ padding: '2rem', textAlign: 'center', color: '#1e293b' }}>Loading watchlist…</div>
+         : error ? (
+           <div style={{ padding: '2rem', textAlign: 'center', color: '#ef4444' }}>
+             <div style={{ marginBottom: '0.75rem' }}>❌ {error}</div>
+             <button onClick={() => fetchWatchlist(1)} style={{ padding: '0.4rem 1rem', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: '0.8rem' }}>Retry</button>
+           </div>
+         ) : !data?.students?.length ? <div style={{ padding: '2rem', textAlign: 'center', color: '#1e293b' }}>Watchlist is empty.</div>
          : (
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                 {['Priority', 'Intern', 'Email', 'SP', 'Frozen', 'Reasons', 'Watched Since', 'Actions'].map(h => (
-                  <th key={h} style={{ padding: '0.55rem 0.75rem', textAlign: 'left', color: '#64748b', fontWeight: 600 }}>{h}</th>
+                  <th key={h} style={{ padding: '0.55rem 0.75rem', textAlign: 'left', color: '#1e293b', fontWeight: 600 }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -434,17 +446,17 @@ function WatchlistTab({ searchParams, setSearchParams }) {
                       </span>
                     </td>
                     <td style={{ padding: '0.55rem 0.75rem', fontWeight: 500, color: '#1e293b' }}>{w.name}</td>
-                    <td style={{ padding: '0.55rem 0.75rem', color: '#64748b' }}>{w.email}</td>
+                    <td style={{ padding: '0.55rem 0.75rem', color: '#1e293b' }}>{w.email}</td>
                     <td style={{ padding: '0.55rem 0.75rem', fontWeight: 600, color: '#3b82f6' }}>{w.sp_points ?? w.reputation}</td>
                     <td style={{ padding: '0.55rem 0.75rem' }}>
                       {w.is_frozen
                         ? <span style={{ background: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.5rem', borderRadius: 10, fontSize: '0.7rem' }}>❄️ Yes</span>
                         : <span style={{ background: '#f0fdf4', color: '#15803d', padding: '0.15rem 0.5rem', borderRadius: 10, fontSize: '0.7rem' }}>🟢 No</span>}
                     </td>
-                    <td style={{ padding: '0.55rem 0.75rem', color: '#475569', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '0.55rem 0.75rem', color: '#1e293b', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {w.reasons?.length ? w.reasons.join('; ') : '—'}
                     </td>
-                    <td style={{ padding: '0.55rem 0.75rem', color: '#94a3b8', whiteSpace: 'nowrap' }}>{timeAgo(w.added_at)}</td>
+                    <td style={{ padding: '0.55rem 0.75rem', color: '#1e293b', whiteSpace: 'nowrap' }}>{timeAgo(w.added_at)}</td>
                     <td style={{ padding: '0.55rem 0.75rem', whiteSpace: 'nowrap' }}>
                       <button onClick={() => viewLedger(w.user_id, w.name)}
                         style={{ padding: '0.25rem 0.6rem', background: '#f1f5f9', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: '0.75rem', marginRight: 4 }}>Ledger</button>
@@ -467,7 +479,7 @@ function WatchlistTab({ searchParams, setSearchParams }) {
         <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem' }}>
           <button disabled={wlPage <= 1} onClick={() => goPage(wlPage - 1)}
             style={{ padding: '0.35rem 0.75rem', border: '1px solid #e2e8f0', borderRadius: 6, background: '#fff', cursor: wlPage <= 1 ? 'not-allowed' : 'pointer', opacity: wlPage <= 1 ? 0.5 : 1 }}>‹ Prev</button>
-          <span style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', color: '#64748b' }}>Page {wlPage} of {data.totalPages}</span>
+          <span style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', color: '#1e293b' }}>Page {wlPage} of {data.totalPages}</span>
           <button disabled={wlPage >= data.totalPages} onClick={() => goPage(wlPage + 1)}
             style={{ padding: '0.35rem 0.75rem', border: '1px solid #e2e8f0', borderRadius: 6, background: '#fff', cursor: wlPage >= data.totalPages ? 'not-allowed' : 'pointer', opacity: wlPage >= data.totalPages ? 0.5 : 1 }}>Next ›</button>
         </div>
@@ -484,7 +496,7 @@ function Modal({ onClose, title, children }) {
       <div style={{ background: '#fff', borderRadius: 14, padding: '1.5rem', width: '100%', maxWidth: 420, boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1e293b' }}>{title}</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.1rem', cursor: 'pointer', color: '#94a3b8', padding: '0.1rem 0.3rem' }}>✕</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.1rem', cursor: 'pointer', color: '#1e293b', padding: '0.1rem 0.3rem' }}>✕</button>
         </div>
         {children}
       </div>
@@ -519,10 +531,10 @@ function ExportModal({ interns, onClose }) {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ background: '#fff', borderRadius: 12, padding: '1.75rem', width: 360, boxShadow: '0 8px 24px rgba(0,0,0,0.15)' }}>
         <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.25rem' }}>📤 Export Interns</h3>
-        <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '1.25rem' }}>Export {interns.length} intern{interns.length !== 1 ? 's' : ''} to file.</p>
+        <p style={{ fontSize: '0.8rem', color: '#1e293b', marginBottom: '1.25rem' }}>Export {interns.length} intern{interns.length !== 1 ? 's' : ''} to file.</p>
         <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.25rem' }}>
           {[['csv', 'CSV Spreadsheet'], ['json', 'JSON']].map(([v, label]) => (
-            <button key={v} onClick={() => setFormat(v)} style={{ flex: 1, padding: '0.75rem', borderRadius: 8, border: `2px solid ${format === v ? '#3b82f6' : '#e2e8f0'}`, background: format === v ? '#eff6ff' : '#fff', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: format === v ? '#1d4ed8' : '#64748b' }}>{label}</button>
+            <button key={v} onClick={() => setFormat(v)} style={{ flex: 1, padding: '0.75rem', borderRadius: 8, border: `2px solid ${format === v ? '#3b82f6' : '#cbd5e1'}`, background: format === v ? '#eff6ff' : '#fff', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: format === v ? '#1d4ed8' : '#1e293b' }}>{label}</button>
           ))}
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
@@ -539,13 +551,13 @@ function FreezeModal({ target, onClose, onAction, freezing }) {
   const isUnfreeze = target.is_frozen;
   return (
     <Modal onClose={onClose} title={isUnfreeze ? '❄️ Unfreeze Account' : '🥶 Freeze Account'}>
-      <p style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '1.25rem', lineHeight: 1.6 }}>
+      <p style={{ fontSize: '0.85rem', color: '#1e293b', marginBottom: '1.25rem', lineHeight: 1.6 }}>
         {isUnfreeze
           ? <>Unfreezing <strong>{target.name}</strong> will allow them to earn and spend SP again. Continue?</>
           : <>Freezing <strong>{target.name}</strong> will suspend their SP earning and spending. An audit log will be recorded. Continue?</>}
       </p>
       <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'flex-end' }}>
-        <button onClick={onClose} disabled={freezing} style={{ padding: '0.45rem 1rem', border: '1px solid #e2e8f0', borderRadius: 8, background: '#fff', fontSize: '0.82rem', cursor: 'pointer', color: '#475569' }}>Cancel</button>
+        <button onClick={onClose} disabled={freezing} style={{ padding: '0.45rem 1rem', border: '1px solid #334155', borderRadius: 8, background: '#1e293b', fontSize: '0.82rem', cursor: 'pointer', color: '#94a3b8' }}>Cancel</button>
         <button disabled={freezing} onClick={onAction}
           style={{ padding: '0.45rem 1rem', border: 'none', borderRadius: 8, fontSize: '0.82rem', fontWeight: 600, cursor: freezing ? 'not-allowed' : 'pointer',
             opacity: freezing ? 0.6 : 1,
@@ -572,17 +584,17 @@ function AdjustModal({ target, onClose, onAction, adjusting, adjustError }) {
     <Modal onClose={onClose} title={`⚖️ Adjust SP — ${target.name}`}>
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: '0.875rem' }}>
-          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#475569', marginBottom: '0.3rem' }}>Current SP Balance</label>
+          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#1e293b', marginBottom: '0.3rem' }}>Current SP Balance</label>
           <span style={{ fontSize: '1rem', fontWeight: 700, color: '#3b82f6' }}>{target.sp_points} SP</span>
         </div>
         <div style={{ marginBottom: '0.875rem' }}>
-          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#475569', marginBottom: '0.3rem' }}>Points Delta <span style={{ color: '#ef4444' }}>*</span></label>
+          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#1e293b', marginBottom: '0.3rem' }}>Points Delta <span style={{ color: '#ef4444' }}>*</span></label>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <input type="number" value={pendingDelta} onChange={e => { setPendingDelta(e.target.value); setAdjustError(''); }}
               placeholder="e.g. -50 or +100"
               min="-1000" max="1000" step="1"
-              style={{ flex: 1, padding: '0.45rem 0.6rem', border: `1px solid ${adjustError && !valid ? '#ef4444' : '#e2e8f0'}`, borderRadius: 6, fontSize: '0.82rem' }} />
-            <span style={{ fontSize: '0.75rem', color: '#94a3b8', whiteSpace: 'nowrap' }}>|delta| ≤ 1000</span>
+              style={{ flex: 1, padding: '0.45rem 0.6rem', border: `1px solid ${adjustError && !valid ? '#ef4444' : '#cbd5e1'}`, borderRadius: 6, fontSize: '0.82rem' }} />
+            <span style={{ fontSize: '0.75rem', color: '#1e293b', whiteSpace: 'nowrap' }}>|delta| ≤ 1000</span>
           </div>
           {!isNaN(delta) && delta !== 0 && (
             <div style={{ marginTop: '0.3rem', fontSize: '0.78rem', fontWeight: 600, color: delta > 0 ? '#10b981' : '#ef4444' }}>
@@ -591,7 +603,7 @@ function AdjustModal({ target, onClose, onAction, adjusting, adjustError }) {
           )}
         </div>
         <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#475569', marginBottom: '0.3rem' }}>Reason <span style={{ color: '#ef4444' }}>*</span></label>
+          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#1e293b', marginBottom: '0.3rem' }}>Reason <span style={{ color: '#ef4444' }}>*</span></label>
           <textarea value={pendingReason} onChange={e => setPendingReason(e.target.value)}
             placeholder="Explain why this adjustment is being made…"
             rows={3}
@@ -599,7 +611,7 @@ function AdjustModal({ target, onClose, onAction, adjusting, adjustError }) {
         </div>
         {adjustError && <div style={{ marginBottom: '0.75rem', padding: '0.5rem 0.75rem', background: '#fef2f2', color: '#dc2626', borderRadius: 6, fontSize: '0.78rem' }}>{adjustError}</div>}
         <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'flex-end' }}>
-          <button type="button" onClick={onClose} disabled={adjusting} style={{ padding: '0.45rem 1rem', border: '1px solid #e2e8f0', borderRadius: 8, background: '#fff', fontSize: '0.82rem', cursor: 'pointer', color: '#475569' }}>Cancel</button>
+          <button type="button" onClick={onClose} disabled={adjusting} style={{ padding: '0.45rem 1rem', border: '1px solid #334155', borderRadius: 8, background: '#1e293b', fontSize: '0.82rem', cursor: 'pointer', color: '#94a3b8' }}>Cancel</button>
           <button type="submit" disabled={adjusting || !valid || !pendingReason.trim()}
             style={{ padding: '0.45rem 1rem', border: 'none', borderRadius: 8, fontSize: '0.82rem', fontWeight: 600, cursor: (adjusting || !valid || !pendingReason.trim()) ? 'not-allowed' : 'pointer',
               opacity: (adjusting || !valid || !pendingReason.trim()) ? 0.5 : 1, background: '#7c3aed', color: '#fff' }}>
@@ -708,11 +720,11 @@ export default function InternManagementPage() {
       <div style={{ marginTop: '0.75rem' }}>
         {overview.distribution.map(b => (
           <div key={b.bucket} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: 4 }}>
-            <span style={{ width: 70, fontSize: '0.7rem', color: '#64748b' }}>{b.bucket}</span>
-            <div style={{ flex: 1, background: '#e2e8f0', borderRadius: 3, height: 12 }}>
+            <span style={{ width: 70, fontSize: '0.7rem', color: '#1e293b' }}>{b.bucket}</span>
+            <div style={{ flex: 1, background: '#cbd5e1', borderRadius: 3, height: 12 }}>
               <div style={{ width: `${Math.round((b.count / total) * 100)}%`, background: '#3b82f6', borderRadius: 3, height: 12, transition: 'width 0.3s' }} />
             </div>
-            <span style={{ fontSize: '0.7rem', color: '#64748b', width: 28, textAlign: 'right' }}>{b.count}</span>
+            <span style={{ fontSize: '0.7rem', color: '#1e293b', width: 28, textAlign: 'right' }}>{b.count}</span>
           </div>
         ))}
       </div>
@@ -725,11 +737,11 @@ export default function InternManagementPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
         <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1e293b' }}>🎓 Intern SP Management</h1>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <button onClick={() => setExportTarget(interns || [])} style={{ padding: '0.35rem 0.85rem', borderRadius: 6, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', fontSize: '0.8rem', color: '#475569' }}>📤 Export</button>
+          <button onClick={() => setExportTarget(interns || [])} style={{ padding: '0.35rem 0.85rem', borderRadius: 6, border: '1px solid #334155', background: '#1e293b', cursor: 'pointer', fontSize: '0.8rem', color: '#94a3b8' }}>📤 Export</button>
           {['overview', 'interns', 'ledger', 'watchlist', 'anomalies'].map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
               padding: '0.35rem 0.85rem', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 500,
-              background: tab === t ? '#3b82f6' : '#e2e8f0', color: tab === t ? '#fff' : '#475569',
+              background: tab === t ? '#3b82f6' : '#cbd5e1', color: tab === t ? '#fff' : '#1e293b',
             }}>{t.charAt(0).toUpperCase() + t.slice(1)}</button>
           ))}
         </div>
@@ -738,7 +750,7 @@ export default function InternManagementPage() {
       {/* ── Overview tab ─────────────────────────────────────────────────── */}
       {tab === 'overview' && (
         <div>
-          {!overview ? <div style={{ color: '#94a3b8' }}>Loading overview…</div> : (
+          {!overview ? <div style={{ color: '#1e293b' }}>Loading overview…</div> : (
             <>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '0.875rem', marginBottom: '1rem' }}>
                 {[
@@ -751,7 +763,7 @@ export default function InternManagementPage() {
                   <div key={c.label} style={{ background: '#fff', borderRadius: 10, padding: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0' }}>
                     <div style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{c.icon}</div>
                     <div style={{ fontSize: '1.5rem', fontWeight: 700, color: c.color }}>{c.value}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{c.label}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#1e293b' }}>{c.label}</div>
                   </div>
                 ))}
               </div>
@@ -764,7 +776,7 @@ export default function InternManagementPage() {
                   <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.75rem', color: '#1e293b' }}>Top Earners</h3>
                   {overview.topEarners?.map(u => (
                     <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.3rem 0', borderBottom: '1px solid #f1f5f9' }}>
-                      <span style={{ fontSize: '0.8rem', color: '#334155' }}>{u.name}</span>
+                      <span style={{ fontSize: '0.8rem', color: '#1e293b' }}>{u.name}</span>
                       <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#3b82f6' }}>{u.sp_points ?? u.reputation} SP</span>
                     </div>
                   ))}
@@ -787,7 +799,7 @@ export default function InternManagementPage() {
               <option value="true">Frozen only</option>
               <option value="false">Active only</option>
             </select>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem', color: '#475569' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem', color: '#1e293b' }}>
               <input type="checkbox" checked={watchlistOnly} onChange={e => setWatchlistOnly(e.target.checked)} />
               Watchlist only
             </label>
@@ -797,17 +809,20 @@ export default function InternManagementPage() {
           {/* Table */}
           <div style={{ background: '#fff', borderRadius: 10, boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', overflow: 'auto' }}>
             {loading ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>Loading…</div>
+              <div style={{ padding: '2rem', textAlign: 'center', color: '#1e293b' }}>Loading…</div>
             ) : error ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: '#ef4444' }}>❌ {error}</div>
+              <div style={{ padding: '2rem', textAlign: 'center', color: '#ef4444' }}>
+                <div style={{ marginBottom: '0.75rem' }}>❌ {error}</div>
+                <button onClick={() => fetchInterns(1)} style={{ padding: '0.4rem 1rem', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: '0.8rem' }}>Retry</button>
+              </div>
             ) : !interns?.length ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No interns found.</div>
+              <div style={{ padding: '2rem', textAlign: 'center', color: '#1e293b' }}>No interns found.</div>
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
                 <thead>
                   <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                     {['Name', 'Email', 'SP', 'Status', 'Watchlist', 'Anomalies', 'Joined', 'Actions'].map(h => (
-                      <th key={h} style={{ padding: '0.6rem 0.75rem', textAlign: 'left', color: '#64748b', fontWeight: 600 }}>{h}</th>
+                      <th key={h} style={{ padding: '0.6rem 0.75rem', textAlign: 'left', color: '#1e293b', fontWeight: 600 }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -815,7 +830,7 @@ export default function InternManagementPage() {
                   {interns.map(s => (
                     <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                       <td style={{ padding: '0.6rem 0.75rem', fontWeight: 500, color: '#1e293b' }}>{s.name}</td>
-                      <td style={{ padding: '0.6rem 0.75rem', color: '#64748b' }}>{s.email}</td>
+                      <td style={{ padding: '0.6rem 0.75rem', color: '#1e293b' }}>{s.email}</td>
                       <td style={{ padding: '0.6rem 0.75rem', fontWeight: 600, color: '#3b82f6' }}>{s.sp_points ?? s.reputation}</td>
                       <td style={{ padding: '0.6rem 0.75rem' }}>
                         {s.is_frozen ? (
@@ -845,7 +860,7 @@ export default function InternManagementPage() {
                           <span style={{ color: '#cbd5e1', fontSize: '0.75rem' }}>—</span>
                         )}
                       </td>
-                      <td style={{ padding: '0.6rem 0.75rem', color: '#64748b' }}>{timeAgo(s.created_at)}</td>
+                      <td style={{ padding: '0.6rem 0.75rem', color: '#1e293b' }}>{timeAgo(s.created_at)}</td>
                       <td style={{ padding: '0.6rem 0.75rem' }}>
                         <button
                           onClick={() => { setSearchParams(p => { const n = new URLSearchParams(p); n.set('tab', 'ledger'); n.set('ledgerStudent', s.id); n.delete('ledgerPage'); return n; }); }}
@@ -872,7 +887,7 @@ export default function InternManagementPage() {
           {totalPages > 1 && (
             <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem' }}>
               <button disabled={page <= 1} onClick={() => goPage(page - 1)} style={{ padding: '0.35rem 0.75rem', border: '1px solid #e2e8f0', borderRadius: 6, background: '#fff', cursor: page <= 1 ? 'not-allowed' : 'pointer', opacity: page <= 1 ? 0.5 : 1 }}>‹ Prev</button>
-              <span style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', color: '#64748b' }}>Page {page} of {totalPages}</span>
+              <span style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', color: '#1e293b' }}>Page {page} of {totalPages}</span>
               <button disabled={page >= totalPages} onClick={() => goPage(page + 1)} style={{ padding: '0.35rem 0.75rem', border: '1px solid #e2e8f0', borderRadius: 6, background: '#fff', cursor: page >= totalPages ? 'not-allowed' : 'pointer', opacity: page >= totalPages ? 0.5 : 1 }}>Next ›</button>
             </div>
           )}

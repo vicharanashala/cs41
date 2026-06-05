@@ -12,7 +12,7 @@ function StatCard({ label, value, icon, color }) {
       <div style={{ fontSize: '1.75rem', fontWeight: 700, color: color }}>
         {value ?? '—'}
       </div>
-      <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>{label}</div>
+      <div style={{ fontSize: '0.8rem', color: '#1e293b', marginTop: '0.25rem' }}>{label}</div>
     </div>
   );
 }
@@ -41,7 +41,7 @@ function ConfidenceBar({ score }) {
       <div style={{ flex: 1, height: 6, background: '#f1f5f9', borderRadius: 3, overflow: 'hidden' }}>
         <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 3 }} />
       </div>
-      <span style={{ fontSize: '0.75rem', color: '#64748b', minWidth: 28 }}>{pct}%</span>
+      <span style={{ fontSize: '0.75rem', color: '#1e293b', minWidth: 28 }}>{pct}%</span>
     </div>
   );
 }
@@ -60,7 +60,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: '3rem 2rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.9rem' }}>
+      <div style={{ padding: '3rem 2rem', textAlign: 'center', color: '#1e293b', fontSize: '0.9rem' }}>
         Loading dashboard…
       </div>
     );
@@ -90,37 +90,37 @@ export default function DashboardPage() {
         <div style={{ background: '#fff', borderRadius: 10, padding: '1.25rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0' }}>
           <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>⏳</div>
           <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#f59e0b' }}>{stats.pending ?? '—'}</div>
-          <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>Pending Review</div>
+          <div style={{ fontSize: '0.8rem', color: '#1e293b', marginTop: '0.25rem' }}>Pending Review</div>
         </div>
         <div style={{ background: '#fff', borderRadius: 10, padding: '1.25rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0' }}>
           <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>✅</div>
           <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#10b981' }}>{stats.published ?? '—'}</div>
-          <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>Published FAQs</div>
+          <div style={{ fontSize: '0.8rem', color: '#1e293b', marginTop: '0.25rem' }}>Published FAQs</div>
         </div>
         <div style={{ background: '#fff', borderRadius: 10, padding: '1.25rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0' }}>
           <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>❌</div>
           <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#ef4444' }}>{stats.rejected ?? '—'}</div>
-          <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>Rejected</div>
+          <div style={{ fontSize: '0.8rem', color: '#1e293b', marginTop: '0.25rem' }}>Rejected</div>
         </div>
         <div style={{ background: '#fff', borderRadius: 10, padding: '1.25rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0' }}>
           <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>📝</div>
           <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#6366f1' }}>{stats.total ?? '—'}</div>
-          <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>Total Questions</div>
+          <div style={{ fontSize: '0.8rem', color: '#1e293b', marginTop: '0.25rem' }}>Total Questions</div>
         </div>
         <div style={{ background: '#fff', borderRadius: 10, padding: '1.25rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0' }}>
           <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>⏰</div>
           <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#8b5cf6' }}>{stats.avgQueueHours != null ? `${Math.round(stats.avgQueueHours * 10) / 10}h` : '—'}</div>
-          <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>Avg Queue Time</div>
+          <div style={{ fontSize: '0.8rem', color: '#1e293b', marginTop: '0.25rem' }}>Avg Queue Time</div>
         </div>
         <div style={{ background: '#fff', borderRadius: 10, padding: '1.25rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0' }}>
           <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>🗓️</div>
           <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#0ea5e9' }}>{reviewedThisWeek}</div>
-          <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>Reviewed This Week</div>
+          <div style={{ fontSize: '0.8rem', color: '#1e293b', marginTop: '0.25rem' }}>Reviewed This Week</div>
         </div>
         <div style={{ background: '#fff', borderRadius: 10, padding: '1.25rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0' }}>
           <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>👥</div>
           <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#8b5cf6' }}>{stats.totalInterns ?? '—'}</div>
-          <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>Total Interns</div>
+          <div style={{ fontSize: '0.8rem', color: '#1e293b', marginTop: '0.25rem' }}>Total Interns</div>
         </div>
       </div>
 
@@ -129,17 +129,17 @@ export default function DashboardPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
           <div style={{ background: '#f8fafc', borderRadius: 8, padding: '1rem', border: '1px solid #e2e8f0', textAlign: 'center' }}>
             <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#3b82f6' }}>{stats.analyzedCount ?? '—'}</div>
-            <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem' }}>Total Analyzed</div>
+            <div style={{ fontSize: '0.75rem', color: '#1e293b', marginTop: '0.25rem' }}>Total Analyzed</div>
           </div>
           <div style={{ background: '#f8fafc', borderRadius: 8, padding: '1rem', border: '1px solid #e2e8f0', textAlign: 'center' }}>
             <div style={{ fontSize: '1.75rem', fontWeight: 700, color: stats.avgConfidence >= 70 ? '#10b981' : stats.avgConfidence >= 50 ? '#f59e0b' : '#ef4444' }}>
               {stats.avgConfidence != null ? `${Math.round(stats.avgConfidence)}%` : '—'}
             </div>
-            <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem' }}>Avg AI Confidence</div>
+            <div style={{ fontSize: '0.75rem', color: '#1e293b', marginTop: '0.25rem' }}>Avg AI Confidence</div>
           </div>
           <div style={{ background: '#f8fafc', borderRadius: 8, padding: '1rem', border: '1px solid #e2e8f0', textAlign: 'center' }}>
             <ConfidenceBar score={stats.avgConfidence} />
-            <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.4rem' }}>Confidence Gauge</div>
+            <div style={{ fontSize: '0.75rem', color: '#1e293b', marginTop: '0.4rem' }}>Confidence Gauge</div>
           </div>
         </div>
       </SectionCard>
@@ -147,7 +147,7 @@ export default function DashboardPage() {
       {/* Recent AI analyses */}
       <SectionCard title="📡 RECENT AI ANALYSES">
         {recentAnalyses.length === 0 ? (
-          <div style={{ color: '#94a3b8', fontSize: '0.85rem', textAlign: 'center', padding: '1rem' }}>
+          <div style={{ color: '#1e293b', fontSize: '0.85rem', textAlign: 'center', padding: '1rem' }}>
             No recent AI analyses available.
           </div>
         ) : (
@@ -170,7 +170,7 @@ export default function DashboardPage() {
                   <span style={{ fontSize: '0.7rem', fontWeight: 700, color: (item.ai_confidence ?? 0) >= 70 ? '#10b981' : (item.ai_confidence ?? 0) >= 50 ? '#f59e0b' : '#ef4444' }}>
                     {item.ai_confidence != null ? Math.round(item.ai_confidence) : '—'}
                   </span>
-                  <span style={{ fontSize: '0.55rem', color: '#94a3b8' }}>conf</span>
+                  <span style={{ fontSize: '0.55rem', color: '#1e293b' }}>conf</span>
                 </div>
 
                 {/* Title */}
@@ -178,8 +178,8 @@ export default function DashboardPage() {
                   <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {item.title || `FAQ #${item.question_id?.slice(0, 8)}`}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 2 }}>
-                    Quality: <strong style={{ color: '#334155' }}>{item.ai_quality_score != null ? `${Math.round(item.ai_quality_score)}%` : '—'}</strong>
+                  <div style={{ fontSize: '0.75rem', color: '#1e293b', marginTop: 2 }}>
+                    Quality: <strong style={{ color: '#1e293b' }}>{item.ai_quality_score != null ? `${Math.round(item.ai_quality_score)}%` : '—'}</strong>
                     {item.analyzed_at ? ` · ${new Date(item.analyzed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` : ''}
                   </div>
                 </div>
@@ -204,7 +204,7 @@ export default function DashboardPage() {
       {/* New Questions from Interns */}
       <SectionCard title="🆕 NEW QUESTIONS FROM INTERNS">
         {recentInternQuestions.length === 0 ? (
-          <div style={{ color: '#94a3b8', fontSize: '0.85rem', textAlign: 'center', padding: '1rem' }}>
+          <div style={{ color: '#1e293b', fontSize: '0.85rem', textAlign: 'center', padding: '1rem' }}>
             No pending questions from interns.
           </div>
         ) : (
@@ -224,14 +224,14 @@ export default function DashboardPage() {
                   <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#8b5cf6' }}>
                     {q.answer_count ?? 0}
                   </span>
-                  <span style={{ fontSize: '0.55rem', color: '#94a3b8' }}>ans</span>
+                  <span style={{ fontSize: '0.55rem', color: '#1e293b' }}>ans</span>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {q.title}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 2 }}>
-                    by <strong style={{ color: '#334155' }}>{q.author_name || 'Anonymous'}</strong>
+                  <div style={{ fontSize: '0.75rem', color: '#1e293b', marginTop: 2 }}>
+                    by <strong style={{ color: '#1e293b' }}>{q.author_name || 'Anonymous'}</strong>
                     {q.trigger_at ? ` · ${new Date(q.trigger_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` : ''}
                   </div>
                 </div>
@@ -257,7 +257,7 @@ export default function DashboardPage() {
           const interns = data?.recentlyAddedInterns ?? [];
           if (interns.length === 0) {
             return (
-              <div style={{ color: '#94a3b8', fontSize: '0.85rem', textAlign: 'center', padding: '1.5rem' }}>
+              <div style={{ color: '#1e293b', fontSize: '0.85rem', textAlign: 'center', padding: '1.5rem' }}>
                 No intern accounts found.
               </div>
             );
@@ -268,7 +268,7 @@ export default function DashboardPage() {
                 <thead>
                   <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
                     {['Name', 'Email', 'SP', 'Frozen', 'Watchlist', 'Joined'].map(h => (
-                      <th key={h} style={{ padding: '0.5rem 0.75rem', textAlign: 'left', color: '#64748b', fontWeight: 600 }}>{h}</th>
+                      <th key={h} style={{ padding: '0.5rem 0.75rem', textAlign: 'left', color: '#1e293b', fontWeight: 600 }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -276,8 +276,8 @@ export default function DashboardPage() {
                   {interns.map((s, i) => (
                     <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
                       <td style={{ padding: '0.5rem 0.75rem', fontWeight: 500, color: '#1e293b' }}>{s.name || '—'}</td>
-                      <td style={{ padding: '0.5rem 0.75rem', color: '#64748b' }}>{s.email}</td>
-                      <td style={{ padding: '0.5rem 0.75rem', fontWeight: 600, color: s.reputation > 0 ? '#059669' : '#94a3b8' }}>
+                      <td style={{ padding: '0.5rem 0.75rem', color: '#1e293b' }}>{s.email}</td>
+                      <td style={{ padding: '0.5rem 0.75rem', fontWeight: 600, color: s.reputation > 0 ? '#059669' : '#1e293b' }}>
                         {s.reputation ?? 0}
                       </td>
                       <td style={{ padding: '0.5rem 0.75rem' }}>
@@ -287,10 +287,10 @@ export default function DashboardPage() {
                           <span style={{ color: '#10b981' }}>—</span>
                         )}
                       </td>
-                      <td style={{ padding: '0.5rem 0.75rem', color: s.watchlist_entries > 0 ? '#f59e0b' : '#94a3b8' }}>
+                      <td style={{ padding: '0.5rem 0.75rem', color: s.watchlist_entries > 0 ? '#f59e0b' : '#1e293b' }}>
                         {s.watchlist_entries > 0 ? `⚠ ${s.watchlist_entries}` : '—'}
                       </td>
-                      <td style={{ padding: '0.5rem 0.75rem', color: '#94a3b8' }}>
+                      <td style={{ padding: '0.5rem 0.75rem', color: '#1e293b' }}>
                         {s.created_at ? new Date(s.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
                       </td>
                     </tr>
@@ -325,7 +325,7 @@ export default function DashboardPage() {
           <Link
             to="/faculty/queue?status=published"
             style={{
-              padding: '0.6rem 1.25rem', background: '#f1f5f9', color: '#334155',
+              padding: '0.6rem 1.25rem', background: '#1e293b', color: '#94a3b8',
               borderRadius: 6, textDecoration: 'none', fontSize: '0.875rem', fontWeight: 500,
             }}
           >
@@ -334,7 +334,7 @@ export default function DashboardPage() {
           <Link
             to="/faculty/analytics"
             style={{
-              padding: '0.6rem 1.25rem', background: '#f1f5f9', color: '#334155',
+              padding: '0.6rem 1.25rem', background: '#1e293b', color: '#94a3b8',
               borderRadius: 6, textDecoration: 'none', fontSize: '0.875rem', fontWeight: 500,
             }}
           >
@@ -343,7 +343,7 @@ export default function DashboardPage() {
           <Link
             to="/faculty/moderation"
             style={{
-              padding: '0.6rem 1.25rem', background: '#f1f5f9', color: '#334155',
+              padding: '0.6rem 1.25rem', background: '#1e293b', color: '#94a3b8',
               borderRadius: 6, textDecoration: 'none', fontSize: '0.875rem', fontWeight: 500,
             }}
           >

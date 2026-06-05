@@ -1,10 +1,17 @@
 import axios from 'axios';
 
-const BASE = '/api/faculty/interns';
+const api = axios.create({ baseURL: '/api' });
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
-const get  = (path, params) => axios.get(`${BASE}${path}`, { params }).then(r => r.data);
-const post = (path, data)    => axios.post(`${BASE}${path}`, data).then(r => r.data);
-const del  = (path)          => axios.delete(`${BASE}${path}`).then(r => r.data);
+const BASE = '/faculty/interns';
+
+const get  = (path, params) => api.get(`${BASE}${path}`, { params }).then(r => r.data);
+const post = (path, data)    => api.post(`${BASE}${path}`, data).then(r => r.data);
+const del  = (path)          => api.delete(`${BASE}${path}`).then(r => r.data);
 
 // ── Overview & Stats ─────────────────────────────────────────────────────────
 export const getInternOverview    = ()                    => get('/overview');

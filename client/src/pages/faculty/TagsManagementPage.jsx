@@ -4,7 +4,7 @@ import { getTags, createTag, deleteTag } from '../../api/faculty.js';
 const PRESET_COLORS = [
   '#6366f1', '#8b5cf6', '#ec4899', '#ef4444',
   '#f59e0b', '#10b981', '#06b6d4', '#3b82f6',
-  '#64748b', '#1e293b',
+  '#1e293b', '#1e293b',
 ];
 
 const DEFAULT_PREVIEW = '#6366f1';
@@ -34,7 +34,7 @@ function TagRow({ tag, onDelete, deletingId }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{tag.name}</div>
         {tag.description && (
-          <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: '0.75rem', color: '#1e293b', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {tag.description}
           </div>
         )}
@@ -42,14 +42,14 @@ function TagRow({ tag, onDelete, deletingId }) {
 
       {/* Usage count */}
       <div style={{ textAlign: 'center', minWidth: 48 }}>
-        <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#334155' }}>{tag.usage_count ?? 0}</div>
-        <div style={{ fontSize: '0.65rem', color: '#94a3b8' }}>uses</div>
+        <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }}>{tag.usage_count ?? 0}</div>
+        <div style={{ fontSize: '0.65rem', color: '#1e293b' }}>uses</div>
       </div>
 
       {/* Created by */}
       {tag.created_by_name && (
         <div style={{ minWidth: 80 }}>
-          <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{tag.created_by_name}</div>
+          <div style={{ fontSize: '0.7rem', color: '#1e293b' }}>{tag.created_by_name}</div>
         </div>
       )}
 
@@ -159,7 +159,7 @@ export default function TagsManagementPage() {
       {/* Page header */}
       <div style={{ marginBottom: '1.75rem' }}>
         <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.25rem' }}>🏷 Tags Management</h1>
-        <p style={{ fontSize: '0.85rem', color: '#64748b' }}>Create and manage topic tags used to categorize FAQ questions.</p>
+        <p style={{ fontSize: '0.85rem', color: '#1e293b' }}>Create and manage topic tags used to categorize FAQ questions.</p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '1.5rem', alignItems: 'start' }}>
@@ -177,7 +177,7 @@ export default function TagsManagementPage() {
                 fontSize: '0.85rem', fontFamily: 'inherit',
               }}
             />
-            <span style={{ fontSize: '0.8rem', color: '#94a3b8', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: '0.8rem', color: '#1e293b', whiteSpace: 'nowrap' }}>
               {filtered.length} of {tags.length}
             </span>
           </div>
@@ -191,11 +191,11 @@ export default function TagsManagementPage() {
 
           {/* Loading */}
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8', fontSize: '0.9rem' }}>
+            <div style={{ textAlign: 'center', padding: '3rem', color: '#1e293b', fontSize: '0.9rem' }}>
               Loading tags…
             </div>
           ) : filtered.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8', fontSize: '0.9rem' }}>
+            <div style={{ textAlign: 'center', padding: '3rem', color: '#1e293b', fontSize: '0.9rem' }}>
               {search ? `No tags match "${search}"` : 'No tags yet. Create one using the form.'}
             </div>
           ) : (
@@ -216,7 +216,7 @@ export default function TagsManagementPage() {
             background: '#fff', borderRadius: 10, padding: '1.5rem',
             border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
           }}>
-            <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginBottom: '1rem', letterSpacing: '0.05em' }}>CREATE NEW TAG</div>
+            <div style={{ fontSize: '0.7rem', color: '#1e293b', marginBottom: '1rem', letterSpacing: '0.05em' }}>CREATE NEW TAG</div>
 
             {createSuccess && (
               <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 6, padding: '0.625rem 0.875rem', color: '#16a34a', fontSize: '0.8rem', marginBottom: '0.875rem' }}>
@@ -233,7 +233,7 @@ export default function TagsManagementPage() {
             <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
               {/* Tag name */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', color: '#64748b', marginBottom: '0.3rem' }}>Tag Name *</label>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: '#1e293b', marginBottom: '0.3rem' }}>Tag Name *</label>
                 <input
                   value={name}
                   onChange={e => setName(e.target.value)}
@@ -246,12 +246,12 @@ export default function TagsManagementPage() {
                     fontSize: '0.85rem', fontFamily: 'inherit',
                   }}
                 />
-                <div style={{ fontSize: '0.7rem', color: '#94a3b8', textAlign: 'right', marginTop: 2 }}>{name.length}/40</div>
+                <div style={{ fontSize: '0.7rem', color: '#1e293b', textAlign: 'right', marginTop: 2 }}>{name.length}/40</div>
               </div>
 
               {/* Description */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', color: '#64748b', marginBottom: '0.3rem' }}>Description (optional)</label>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: '#1e293b', marginBottom: '0.3rem' }}>Description (optional)</label>
                 <input
                   value={description}
                   onChange={e => setDescription(e.target.value)}
@@ -267,7 +267,7 @@ export default function TagsManagementPage() {
 
               {/* Color picker */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', color: '#64748b', marginBottom: '0.4rem' }}>Color</label>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: '#1e293b', marginBottom: '0.4rem' }}>Color</label>
                 <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                   {PRESET_COLORS.map(c => (
                     <button
@@ -287,7 +287,7 @@ export default function TagsManagementPage() {
                 </div>
                 {/* Preview */}
                 <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Preview:</div>
+                  <div style={{ fontSize: '0.7rem', color: '#1e293b' }}>Preview:</div>
                   <span style={{
                     padding: '0.2rem 0.6rem',
                     background: color + '20',
@@ -305,8 +305,8 @@ export default function TagsManagementPage() {
                 disabled={creating || !name.trim()}
                 style={{
                   padding: '0.625rem',
-                  background: name.trim() && !creating ? '#3b82f6' : '#e2e8f0',
-                  color: name.trim() && !creating ? '#fff' : '#94a3b8',
+                  background: name.trim() && !creating ? '#3b82f6' : '#cbd5e1',
+                  color: name.trim() && !creating ? '#fff' : '#1e293b',
                   border: 'none', borderRadius: 6,
                   fontSize: '0.875rem', fontWeight: 600,
                   cursor: name.trim() && !creating ? 'pointer' : 'not-allowed',
@@ -335,7 +335,7 @@ export default function TagsManagementPage() {
             <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>
               Delete tag "{confirmDelete.name}"?
             </div>
-            <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '1.25rem' }}>
+            <p style={{ fontSize: '0.875rem', color: '#1e293b', marginBottom: '1.25rem' }}>
               This will remove the tag from all {confirmDelete.usage_count ?? 0} question{confirmDelete.usage_count !== 1 ? 's' : ''} it's currently applied to. This action cannot be undone.
             </p>
             <div style={{ display: 'flex', gap: '0.75rem' }}>
@@ -343,7 +343,7 @@ export default function TagsManagementPage() {
                 onClick={() => setConfirmDelete(null)}
                 style={{
                   flex: 1, padding: '0.625rem',
-                  background: '#f1f5f9', color: '#334155',
+                  background: '#f1f5f9', color: '#1e293b',
                   border: '1px solid #e2e8f0', borderRadius: 6,
                   fontSize: '0.875rem', cursor: 'pointer',
                 }}

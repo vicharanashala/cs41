@@ -16,7 +16,7 @@ import {
 // ── Inline SVG bar chart (no external chart library) ─────────────────────────
 function BarChart({ data, height = 160 }) {
   if (!data || data.length === 0) {
-    return <div style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '0.8rem' }}>No data</div>;
+    return <div style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1e293b', fontSize: '0.8rem' }}>No data</div>;
   }
   const maxVal = Math.max(...data.map(d => d.value), 1);
   const barWidth = Math.max(4, Math.floor((600 - 40) / data.length) - 2);
@@ -48,7 +48,7 @@ function BarChart({ data, height = 160 }) {
 // ── Inline SVG donut / pie chart ──────────────────────────────────────────────
 function DonutChart({ segments, size = 160 }) {
   if (!segments || segments.length === 0) {
-    return <div style={{ height: size, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '0.8rem' }}>No data</div>;
+    return <div style={{ height: size, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1e293b', fontSize: '0.8rem' }}>No data</div>;
   }
   const cx = size / 2;
   const cy = size / 2;
@@ -85,7 +85,7 @@ function DonutChart({ segments, size = 160 }) {
         {segments.map((seg, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem' }}>
             <div style={{ width: 10, height: 10, borderRadius: 2, background: seg.color || '#3b82f6', flexShrink: 0 }} />
-            <span style={{ color: '#64748b' }}>{seg.label}</span>
+            <span style={{ color: '#1e293b' }}>{seg.label}</span>
             <span style={{ color: '#1e293b', fontWeight: 600, marginLeft: 'auto' }}>{seg.value}</span>
           </div>
         ))}
@@ -100,7 +100,7 @@ function KPICard({ label, value, icon, color = '#3b82f6', trend }) {
     <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e2e8f0', padding: '1.25rem 1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', minWidth: 0 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600, letterSpacing: '0.04em', marginBottom: '0.4rem' }}>{label}</div>
+          <div style={{ fontSize: '0.7rem', color: '#1e293b', fontWeight: 600, letterSpacing: '0.04em', marginBottom: '0.4rem' }}>{label}</div>
           <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#1e293b', lineHeight: 1 }}>{value ?? '—'}</div>
           {trend != null && (
             <div style={{ fontSize: '0.7rem', marginTop: '0.3rem', color: trend >= 0 ? '#16a34a' : '#dc2626' }}>
@@ -120,7 +120,7 @@ function KPICard({ label, value, icon, color = '#3b82f6', trend }) {
 function Section({ title, children }) {
   return (
     <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e2e8f0', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: '1.25rem' }}>
-      <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600, letterSpacing: '0.05em', marginBottom: '1rem' }}>{title}</div>
+      <div style={{ fontSize: '0.7rem', color: '#1e293b', fontWeight: 600, letterSpacing: '0.05em', marginBottom: '1rem' }}>{title}</div>
       {children}
     </div>
   );
@@ -131,7 +131,7 @@ function Pill({ label, value, color }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#f8fafc', borderRadius: 8, padding: '0.75rem 1rem', border: '1px solid #e2e8f0', minWidth: 70 }}>
       <div style={{ fontSize: '1.1rem', fontWeight: 700, color: color || '#3b82f6' }}>{value ?? '—'}</div>
-      <div style={{ fontSize: '0.65rem', color: '#94a3b8', marginTop: '0.2rem', textAlign: 'center' }}>{label}</div>
+      <div style={{ fontSize: '0.65rem', color: '#1e293b', marginTop: '0.2rem', textAlign: 'center' }}>{label}</div>
     </div>
   );
 }
@@ -192,12 +192,12 @@ export default function AnalyticsPage() {
           published: '#10b981',
           rejected: '#ef4444',
           changes_requested: '#8b5cf6',
-          community: '#64748b',
+          community: '#1e293b',
         };
         setStatusData((statusRes.breakdown || []).map(s => ({
           label: s.status?.replace(/_/g, ' '),
           value: s.count,
-          color: STATUS_COLORS[s.status] || '#94a3b8',
+          color: STATUS_COLORS[s.status] || '#1e293b',
         })));
       }
 
@@ -242,7 +242,7 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: '3rem 2rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.9rem' }}>
+      <div style={{ padding: '3rem 2rem', textAlign: 'center', color: '#1e293b', fontSize: '0.9rem' }}>
         Loading analytics…
       </div>
     );
@@ -257,12 +257,12 @@ export default function AnalyticsPage() {
       <div style={{ marginBottom: '1.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.25rem' }}>📊 Analytics</h1>
-          <p style={{ fontSize: '0.85rem', color: '#64748b' }}>FAQ submission trends, review throughput, moderation, and platform health metrics.</p>
+          <p style={{ fontSize: '0.85rem', color: '#1e293b' }}>FAQ submission trends, review throughput, moderation, and platform health metrics.</p>
         </div>
         <button
           onClick={handleRefresh}
           disabled={refreshing}
-          style={{ background: refreshing ? '#e2e8f0' : '#3b82f6', color: '#fff', border: 'none', borderRadius: 6, padding: '0.45rem 0.9rem', fontSize: '0.8rem', cursor: refreshing ? 'not-allowed' : 'pointer' }}
+          style={{ background: refreshing ? '#cbd5e1' : '#3b82f6', color: '#fff', border: 'none', borderRadius: 6, padding: '0.45rem 0.9rem', fontSize: '0.8rem', cursor: refreshing ? 'not-allowed' : 'pointer' }}
         >
           {refreshing ? '↻ Refreshing…' : '↻ Refresh Data'}
         </button>
@@ -366,7 +366,7 @@ export default function AnalyticsPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
             {spLeaders.map((s, i) => (
               <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.4rem 0', borderBottom: '1px solid #f1f5f9' }}>
-                <div style={{ width: 20, textAlign: 'center', fontSize: '0.75rem', fontWeight: 700, color: i < 3 ? '#f59e0b' : '#94a3b8' }}>
+                <div style={{ width: 20, textAlign: 'center', fontSize: '0.75rem', fontWeight: 700, color: i < 3 ? '#f59e0b' : '#1e293b' }}>
                   {i + 1}
                 </div>
                 <div style={{ flex: 1, fontSize: '0.85rem', color: '#1e293b', fontWeight: 500 }}>{s.name || s.email}</div>

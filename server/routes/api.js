@@ -2,7 +2,7 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
-import { queryAll, queryOne, run, getDb, saveDb } from '../db/database.js';
+import { queryAll, queryOne, run, getDb, saveDb, beginTransaction, commitTransaction, rollbackTransaction } from '../db/database.js';
 import { authenticate, optionalAuth, JWT_SECRET } from '../middleware/auth.js';
 import { checkAutoPromote } from './faculty.js';
 
@@ -11,8 +11,7 @@ const router = Router();
 // Vote transaction helper — BEGIN IMMEDIATE locks the DB row and prevents double-votes.
 // Returns { upvotes, downvotes } counts after the transaction commits.
 function voteTransaction(userId, targetType, targetId, direction, authorId) {
-  const db = getDb();
-  db.run('BEGIN IMMEDIATE');
+  beginTransaction();
   try {
     const existing = queryOne(
       'SELECT * FROM votes WHERE user_id=? AND target_type=? AND target_id=?',
@@ -21,21 +20,21 @@ function voteTransaction(userId, targetType, targetId, direction, authorId) {
     const deltaMap = { up: { same: -10, flip: 12 }, down: { same: 2, flip: -12 } };
     if (existing) {
       if (existing.direction === direction) {
-        db.run('DELETE FROM votes WHERE id = ?', [existing.id]);
-        db.run('UPDATE users SET reputation = reputation + ? WHERE id = ?', [deltaMap[direction].same, authorId]);
+        run('DELETE FROM votes WHERE id = ?', [existing.id]);
+        run('UPDATE users SET reputation = reputation + ? WHERE id = ?', [deltaMap[direction].same, authorId]);
       } else {
-        db.run('UPDATE votes SET direction = ? WHERE id = ?', [direction, existing.id]);
-        db.run('UPDATE users SET reputation = reputation + ? WHERE id = ?', [deltaMap[direction].flip, authorId]);
+        run('UPDATE votes SET direction = ? WHERE id = ?', [direction, existing.id]);
+        run('UPDATE users SET reputation = reputation + ? WHERE id = ?', [deltaMap[direction].flip, authorId]);
       }
     } else {
-      db.run('INSERT INTO votes (id, user_id, target_type, target_id, direction) VALUES (?, ?, ?, ?, ?)',
+      run('INSERT INTO votes (id, user_id, target_type, target_id, direction) VALUES (?, ?, ?, ?, ?)',
         [uuidv4(), userId, targetType, targetId, direction]);
-      db.run('UPDATE users SET reputation = reputation + ? WHERE id = ?',
+      run('UPDATE users SET reputation = reputation + ? WHERE id = ?',
         [direction === 'up' ? 10 : -2, authorId]);
     }
-    db.run('COMMIT');
+    commitTransaction();
   } catch (err) {
-    db.run('ROLLBACK');
+    rollbackTransaction();
     throw err;
   }
   const upvotes   = queryOne('SELECT COUNT(*) as c FROM votes WHERE target_type=? AND target_id=? AND direction=?', [targetType, targetId, 'up'])?.c || 0;
@@ -350,11 +349,11 @@ router.post('/community/questions/:questionId/vote', (req, res) => {
     FROM questions q
     LEFT JOIN (SELECT target_id, COUNT(*) as c FROM votes WHERE target_type='question' AND direction='up' GROUP BY target_id) v_up ON q.id = v_up.target_id
     LEFT JOIN (SELECT question_id, COUNT(*) as c FROM answers GROUP BY question_id) a_cnt ON q.id = a_cnt.question_id
-    WHERE q.id = ? AND q.is_faq = 0
+    WHERE q.id = ? AND q.faq_status = 'community'
   `, [req.params.questionId]);
 
   if (qData && qData.upvotes >= 10 && qData.answers > 0) {
-    run('UPDATE questions SET is_faq = 1, promoted_at = datetime(\'now\') WHERE id = ?', [req.params.questionId]);
+    run("UPDATE questions SET faq_status='pending_review', trigger_event='upvote_threshold', trigger_at=? WHERE id = ? AND faq_status='community'", [Date.now(), req.params.questionId]);
   }
 
   // Count against the correct target ID
@@ -380,6 +379,46 @@ router.get('/categories', (req, res) => {
   res.json({ categories: categories.map(c => ({ ...c, count: countMap[c.label] || 0 })) });
 });
 
+// Public endpoint: get all published FAQs (community-reviewed + faculty-published)
+// No auth required — published FAQs are meant to be visible on the home page
+router.get('/faqs/published', (req, res) => {
+  const { category } = req.query;
+
+  let where = "q.faq_status = 'published'";
+  const params = [];
+  if (category) { where += ' AND q.category = ?'; params.push(category); }
+
+  const questions = queryAll(`
+    SELECT q.id, q.title, q.description, q.category, q.views,
+           COALESCE(a_count.answer_count, 0) as answer_count,
+           COALESCE(v.upvotes, 0) as upvotes, COALESCE(v.downvotes, 0) as downvotes,
+           q.created_at
+    FROM questions q
+    LEFT JOIN (SELECT question_id, COUNT(*) as answer_count FROM answers GROUP BY question_id) a_count ON q.id = a_count.question_id
+    LEFT JOIN (
+      SELECT target_id,
+             SUM(CASE WHEN direction = 'up'   THEN 1 ELSE 0 END) as upvotes,
+             SUM(CASE WHEN direction = 'down' THEN 1 ELSE 0 END) as downvotes
+      FROM votes WHERE target_type = 'question' GROUP BY target_id
+    ) v ON q.id = v.target_id
+    WHERE ${where}
+    ORDER BY q.created_at DESC
+  `, params);
+
+  const published = questions.map(q => ({
+    id: q.id,
+    q: q.title,
+    a: q.description,
+    category: q.category,
+    votes: q.upvotes - q.downvotes,
+    views: q.views,
+    answerCount: q.answer_count,
+    createdAt: q.created_at,
+  }));
+
+  res.json({ faqs: published });
+});
+
 // ── QUESTIONS ────────────────────────────────────────────────────────────────
 
 router.get('/questions', optionalAuth, (req, res) => {
@@ -387,8 +426,8 @@ router.get('/questions', optionalAuth, (req, res) => {
   const limit = 10;
   const offset = (Number(page) - 1) * limit;
 
-  // Derive faq_status: use real column if it exists, else infer from is_faq
-  const faqStatusExpr = `CASE WHEN q.is_faq = 1 THEN 'published' ELSE 'draft' END`;
+  // Use the real faq_status column from the questions table
+  const faqStatusExpr = 'q.faq_status';
 
   let where = '1=1';
   const params = [];
@@ -400,11 +439,11 @@ router.get('/questions', optionalAuth, (req, res) => {
   if (!status || status === 'all') {
     // show everything — no extra filter
   } else if (status === 'faq' || status === 'published') {
-    where += ' AND q.is_faq = 1';
+    where += " AND q.faq_status = 'published'";
   } else if (status === 'pending' || status === 'draft') {
-    where += ' AND q.is_faq = 0';
+    where += " AND q.faq_status IN ('pending_review','changes_requested')";
   } else if (status === 'archived') {
-    where += ' AND q.is_faq = -1'; // archived uses is_faq = -1 (future)
+    where += " AND q.faq_status = 'archived'";
   }
 
   let orderBy = 'q.created_at DESC';
@@ -500,7 +539,7 @@ router.get('/questions/:id', optionalAuth, (req, res) => {
   res.json({
     question: {
       ...question,
-      faq_status: question.is_faq === 1 ? 'published' : 'draft',
+      faq_status: question.faq_status,
       tags: JSON.parse(question.tags || '[]'),
       userVote: questionVote,
       score: questionUpvotes - questionDownvotes,
@@ -660,7 +699,7 @@ router.post('/community/questions/:id/promote', (req, res) => {
   if (score < 10) return res.status(400).json({ error: 'Question must have a score of at least 10 to be promoted' });
   if (answerCount < 1) return res.status(400).json({ error: 'Question must have at least 1 answer to be promoted' });
 
-  run('UPDATE questions SET is_faq = 1, promoted_at = datetime(\'now\') WHERE id = ?', [req.params.id]);
+  run("UPDATE questions SET faq_status='pending_review', trigger_event='manual_promote', trigger_at=? WHERE id = ?", [Date.now(), req.params.id]);
 
   const updated = queryOne('SELECT * FROM questions WHERE id = ?', [req.params.id]);
   res.json({ question: { ...updated, score, upvotes, downvotes, answer_count: answerCount } });
@@ -680,8 +719,8 @@ router.get('/community/promoted', (req, res) => {
              SUM(CASE WHEN direction = 'down' THEN 1 ELSE 0 END) as downvotes
       FROM votes WHERE target_type = 'question' GROUP BY target_id
     ) v ON q.id = v.target_id
-    WHERE q.is_faq = 1
-    ORDER BY q.promoted_at DESC
+    WHERE q.faq_status = 'published'
+    ORDER BY q.published_at DESC
   `);
 
   res.json({ questions: questions.map(q => ({ ...q, score: (q.upvotes || 0) - (q.downvotes || 0) })) });

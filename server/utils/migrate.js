@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { beginTransaction, commitTransaction, rollbackTransaction } from '../db/database.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -64,14 +65,16 @@ export function runMigrations(db) {
     const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
     const stmts = tokenizeStatements(sql);
     console.log(`  Running: ${file} (${stmts.length} stmt${stmts.length!==1?'s':''})`);
+    // Use the raw db passed in. beginTransaction/commitTransaction/rollbackTransaction
+    // are imported so they use the shared _inTransaction guard from database.js.
     db.run('BEGIN IMMEDIATE');
     try {
       for (const stmt of stmts) db.run(stmt);
       db.run('INSERT INTO AppliedMigrations (name, applied_at) VALUES (?, ?)', [file, Date.now()]);
-      db.run('COMMIT');
+      commitTransaction();
       count++;
     } catch(err) {
-      db.run('ROLLBACK');
+      rollbackTransaction();
       console.error(`  ❌ ${file} failed: ${err.message}`);
       throw err;
     }

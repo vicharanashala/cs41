@@ -12,9 +12,9 @@ const ACTION_CONFIG = {
 };
 
 function getActionInfo(action) {
-  if (!action) return { color: '#64748b', bg: '#f8fafc', label: action };
+  if (!action) return { color: '#1e293b', bg: '#f8fafc', label: action };
   const prefix = action.split('.')[0];
-  return ACTION_CONFIG[prefix] || { color: '#64748b', bg: '#f8fafc', label: prefix };
+  return ACTION_CONFIG[prefix] || { color: '#1e293b', bg: '#f8fafc', label: prefix };
 }
 
 function formatTime(ms) {
@@ -91,17 +91,17 @@ function AuditRow({ entry, expanded, onToggle }) {
 
         {/* Time */}
         <div style={{ minWidth: 72, flexShrink: 0 }}>
-          <div style={{ fontSize: '0.8rem', color: '#64748b' }} title={formatTime(entry.created_at)}>
+          <div style={{ fontSize: '0.8rem', color: '#1e293b' }} title={formatTime(entry.created_at)}>
             {formatRelative(entry.created_at)}
           </div>
         </div>
 
         {/* Actor */}
         <div style={{ minWidth: 100, flexShrink: 0 }}>
-          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#334155' }}>
+          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#1e293b' }}>
             {entry.actor_name || entry.actor_id?.slice(0, 8) || '—'}
           </div>
-          <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>actor</div>
+          <div style={{ fontSize: '0.7rem', color: '#1e293b' }}>actor</div>
         </div>
 
         {/* Action badge */}
@@ -121,8 +121,8 @@ function AuditRow({ entry, expanded, onToggle }) {
 
         {/* Details */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: '0.8rem', color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {entry.details || <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>No details</span>}
+          <div style={{ fontSize: '0.8rem', color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {entry.details || <span style={{ color: '#1e293b', fontStyle: 'italic' }}>No details</span>}
           </div>
         </div>
 
@@ -131,7 +131,7 @@ function AuditRow({ entry, expanded, onToggle }) {
           <span style={{
             padding: '0.15rem 0.5rem',
             background: '#f1f5f9',
-            color: '#64748b',
+            color: '#1e293b',
             borderRadius: 4,
             fontSize: '0.7rem',
           }}>
@@ -141,13 +141,13 @@ function AuditRow({ entry, expanded, onToggle }) {
 
         {/* Metadata indicator */}
         {entry.metadata && (
-          <div style={{ flexShrink: 0, color: '#94a3b8', fontSize: '0.8rem' }} title="Has metadata">
+          <div style={{ flexShrink: 0, color: '#1e293b', fontSize: '0.8rem' }} title="Has metadata">
             📎
           </div>
         )}
 
         {/* Expand arrow */}
-        <div style={{ color: '#94a3b8', fontSize: '0.8rem', flexShrink: 0 }}>
+        <div style={{ color: '#1e293b', fontSize: '0.8rem', flexShrink: 0 }}>
           {expanded ? '▲' : '▼'}
         </div>
       </div>
@@ -163,23 +163,23 @@ function AuditRow({ entry, expanded, onToggle }) {
           gap: '0.625rem',
         }}>
           {/* Full timestamp */}
-          <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+          <div style={{ fontSize: '0.75rem', color: '#1e293b' }}>
             <b>Timestamp:</b> {formatTime(entry.created_at)} ({entry.created_at})
           </div>
 
           {/* Entity ID */}
-          <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+          <div style={{ fontSize: '0.75rem', color: '#1e293b' }}>
             <b>Entity ID:</b>{' '}
-            <code style={{ background: '#e2e8f0', padding: '0.1rem 0.3rem', borderRadius: 3, fontSize: '0.7rem' }}>
+            <code style={{ background: '#cbd5e1', padding: '0.1rem 0.3rem', borderRadius: 3, fontSize: '0.7rem' }}>
               {entry.entity_id}
             </code>
           </div>
 
           {/* Actor ID */}
           {entry.actor_id && (
-            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+            <div style={{ fontSize: '0.75rem', color: '#1e293b' }}>
               <b>Actor ID:</b>{' '}
-              <code style={{ background: '#e2e8f0', padding: '0.1rem 0.3rem', borderRadius: 3, fontSize: '0.7rem' }}>
+              <code style={{ background: '#cbd5e1', padding: '0.1rem 0.3rem', borderRadius: 3, fontSize: '0.7rem' }}>
                 {entry.actor_id}
               </code>
             </div>
@@ -187,7 +187,7 @@ function AuditRow({ entry, expanded, onToggle }) {
 
           {/* Details if truncated */}
           {entry.details && (
-            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+            <div style={{ fontSize: '0.75rem', color: '#1e293b' }}>
               <b>Details:</b> {entry.details}
             </div>
           )}
@@ -195,10 +195,10 @@ function AuditRow({ entry, expanded, onToggle }) {
           {/* Metadata JSON */}
           {entry.metadata && (
             <div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.25rem' }}><b>Metadata:</b></div>
+              <div style={{ fontSize: '0.75rem', color: '#1e293b', marginBottom: '0.25rem' }}><b>Metadata:</b></div>
               <pre style={{
                 background: '#1e293b',
-                color: '#e2e8f0',
+                color: '#cbd5e1',
                 padding: '0.75rem',
                 borderRadius: 6,
                 fontSize: '0.75rem',
@@ -228,7 +228,7 @@ function Pagination({ page, totalPages, total, onChange }) {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0' }}>
-      <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+      <div style={{ fontSize: '0.8rem', color: '#1e293b' }}>
         Page {page} of {totalPages} · {total} total entries
       </div>
       <div style={{ display: 'flex', gap: '0.375rem', alignItems: 'center' }}>
@@ -238,7 +238,7 @@ function Pagination({ page, totalPages, total, onChange }) {
           style={{
             padding: '0.35rem 0.65rem',
             background: page <= 1 ? '#f1f5f9' : '#fff',
-            color: page <= 1 ? '#cbd5e1' : '#334155',
+            color: page <= 1 ? '#cbd5e1' : '#1e293b',
             border: '1px solid #e2e8f0',
             borderRadius: 5,
             fontSize: '0.8rem',
@@ -254,9 +254,9 @@ function Pagination({ page, totalPages, total, onChange }) {
             style={{
               padding: '0.35rem 0.65rem',
               background: p === page ? '#3b82f6' : '#fff',
-              color: p === page ? '#fff' : '#334155',
+              color: p === page ? '#fff' : '#1e293b',
               border: '1px solid',
-              borderColor: p === page ? '#3b82f6' : '#e2e8f0',
+              borderColor: p === page ? '#3b82f6' : '#cbd5e1',
               borderRadius: 5,
               fontSize: '0.8rem',
               cursor: 'pointer',
@@ -272,7 +272,7 @@ function Pagination({ page, totalPages, total, onChange }) {
           style={{
             padding: '0.35rem 0.65rem',
             background: page >= totalPages ? '#f1f5f9' : '#fff',
-            color: page >= totalPages ? '#cbd5e1' : '#334155',
+            color: page >= totalPages ? '#cbd5e1' : '#1e293b',
             border: '1px solid #e2e8f0',
             borderRadius: 5,
             fontSize: '0.8rem',
@@ -346,7 +346,7 @@ export default function AuditLogPage() {
         <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.25rem' }}>
           📋 Audit Log
         </h1>
-        <p style={{ fontSize: '0.85rem', color: '#64748b' }}>
+        <p style={{ fontSize: '0.85rem', color: '#1e293b' }}>
           Complete record of all faculty actions — question reviews, tag changes, SP adjustments, and moderation decisions.
         </p>
       </div>
@@ -365,7 +365,7 @@ export default function AuditLogPage() {
       }}>
         {/* Entity type filter */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          <label style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600, letterSpacing: '0.04em' }}>ENTITY TYPE</label>
+          <label style={{ fontSize: '0.7rem', color: '#1e293b', fontWeight: 600, letterSpacing: '0.04em' }}>ENTITY TYPE</label>
           <select
             value={entityType}
             onChange={e => setParam('entity_type', e.target.value)}
@@ -375,7 +375,7 @@ export default function AuditLogPage() {
               borderRadius: 6,
               fontSize: '0.85rem',
               fontFamily: 'inherit',
-              color: '#334155',
+              color: '#1e293b',
               background: '#fff',
               cursor: 'pointer',
             }}
@@ -386,7 +386,7 @@ export default function AuditLogPage() {
 
         {/* Action prefix filter */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          <label style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600, letterSpacing: '0.04em' }}>ACTION TYPE</label>
+          <label style={{ fontSize: '0.7rem', color: '#1e293b', fontWeight: 600, letterSpacing: '0.04em' }}>ACTION TYPE</label>
           <select
             value={actionPrefix}
             onChange={e => setParam('action', e.target.value)}
@@ -396,7 +396,7 @@ export default function AuditLogPage() {
               borderRadius: 6,
               fontSize: '0.85rem',
               fontFamily: 'inherit',
-              color: '#334155',
+              color: '#1e293b',
               background: '#fff',
               cursor: 'pointer',
             }}
@@ -407,7 +407,7 @@ export default function AuditLogPage() {
 
         {/* Per-page limit */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          <label style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600, letterSpacing: '0.04em' }}>PER PAGE</label>
+          <label style={{ fontSize: '0.7rem', color: '#1e293b', fontWeight: 600, letterSpacing: '0.04em' }}>PER PAGE</label>
           <select
             value={limit}
             onChange={e => setParam('limit', e.target.value)}
@@ -417,7 +417,7 @@ export default function AuditLogPage() {
               borderRadius: 6,
               fontSize: '0.85rem',
               fontFamily: 'inherit',
-              color: '#334155',
+              color: '#1e293b',
               background: '#fff',
               cursor: 'pointer',
             }}
@@ -438,7 +438,7 @@ export default function AuditLogPage() {
             style={{
               padding: '0.45rem 0.875rem',
               background: '#f1f5f9',
-              color: '#64748b',
+              color: '#1e293b',
               border: '1px solid #e2e8f0',
               borderRadius: 6,
               fontSize: '0.8rem',
@@ -455,7 +455,7 @@ export default function AuditLogPage() {
           {Object.entries(ACTION_CONFIG).map(([key, v]) => (
             <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: v.color }} />
-              <span style={{ fontSize: '0.7rem', color: '#64748b' }}>{v.label}</span>
+              <span style={{ fontSize: '0.7rem', color: '#1e293b' }}>{v.label}</span>
             </div>
           ))}
         </div>
@@ -474,12 +474,12 @@ export default function AuditLogPage() {
 
       {/* Loading state */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '4rem', color: '#94a3b8', fontSize: '0.9rem' }}>
+        <div style={{ textAlign: 'center', padding: '4rem', color: '#1e293b', fontSize: '0.9rem' }}>
           Loading audit log…
         </div>
       ) : entries.length === 0 ? (
         /* Empty state */
-        <div style={{ textAlign: 'center', padding: '4rem', color: '#94a3b8', fontSize: '0.9rem' }}>
+        <div style={{ textAlign: 'center', padding: '4rem', color: '#1e293b', fontSize: '0.9rem' }}>
           {(entityType || actionPrefix)
             ? 'No audit entries match the current filters.'
             : 'No audit entries recorded yet.'}

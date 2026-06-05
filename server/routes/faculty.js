@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { requireFaculty } from '../middleware/auth.js';
-import { queryAll, queryOne, run, getDb } from '../db/database.js';
+import { queryAll, queryOne, run, getDb, beginTransaction, commitTransaction, rollbackTransaction } from '../db/database.js';
 import { analyzeQuestion } from '../utils/ai-engine.js';
 
 const router = Router();
@@ -52,15 +52,15 @@ router.get('/dashboard', (req, res) => {
 
   // AI stats
   const analyzedCount = queryOne("SELECT COUNT(*) as c FROM faq_ai_analysis")?.c || 0;
-  const avgConfidence = queryOne("SELECT AVG(ai_confidence) as avg FROM faq_ai_analysis WHERE ai_confidence IS NOT NULL")?.avg || 0;
+  const avgConfidence = queryOne("SELECT AVG(confidence) as avg FROM faq_ai_analysis WHERE confidence IS NOT NULL")?.avg || 0;
 
   // Recently analyzed
   const recentAnalyses = queryAll(`
-    SELECT a.question_id, a.ai_confidence, a.ai_quality_score, a.analyzed_at, q.title
+    SELECT a.question_id, a.confidence, a.quality_score, a.generated_at, q.title
     FROM faq_ai_analysis a
     JOIN questions q ON a.question_id = q.id
-    WHERE a.analyzed_at IS NOT NULL
-    ORDER BY a.analyzed_at DESC
+    WHERE a.generated_at IS NOT NULL
+    ORDER BY a.generated_at DESC
     LIMIT 5
   `);
 
@@ -157,9 +157,9 @@ router.get('/queue', (req, res) => {
   // Attach tags for each question
   const questionsWithTags = questions.map(q => {
     const tags = queryAll(`
-      SELECT t.id, t.name, t.color
+      SELECT t.name, t.color
       FROM faq_tags t
-      JOIN faq_tag_applications ta ON ta.tag_id = t.id
+      JOIN faq_tag_applications ta ON ta.tag_id = t.name
       WHERE ta.question_id = ?
     `, [q.id]);
     return { ...q, tags };
@@ -196,7 +196,7 @@ router.get('/queue/stats', (req, res) => {
   `);
 
   const avgConfidence = queryOne(`
-    SELECT AVG(ai_confidence) as avg FROM faq_ai_analysis
+    SELECT AVG(confidence) as avg FROM faq_ai_analysis
   `)?.avg || 0;
 
   res.json({ pending, published, rejected, changes, avgQueueHours: Math.round(avgQueueHours * 10) / 10, categoryBreakdown, triggerBreakdown, avgConfidence: Math.round(avgConfidence) });
@@ -220,9 +220,9 @@ router.get('/questions/:id', (req, res) => {
 
   // Applied tags
   const tags = queryAll(`
-    SELECT t.id, t.name, t.color, ta.applied_at, ta.applied_by
+    SELECT t.name, t.color, ta.applied_at, ta.applied_by
     FROM faq_tags t
-    JOIN faq_tag_applications ta ON ta.tag_id = t.id
+    JOIN faq_tag_applications ta ON ta.tag_id = t.name
     WHERE ta.question_id = ?
   `, [question.id]);
 
@@ -294,8 +294,7 @@ router.post('/questions/:id/review', (req, res) => {
   const question = queryOne('SELECT * FROM questions WHERE id = ?', [req.params.id]);
   if (!question) return res.status(404).json({ error: 'Question not found' });
 
-  const db = getDb();
-  db.run('BEGIN IMMEDIATE');
+  beginTransaction();
   try {
     run("UPDATE questions SET faq_status = ? WHERE id = ?", [action, req.params.id]);
 
@@ -305,9 +304,9 @@ router.post('/questions/:id/review', (req, res) => {
       [uuidv4(), req.params.id, req.user.id, action, notes || null, null, quality_score || null, Date.now()]
     );
 
-    db.run('COMMIT');
+    commitTransaction();
   } catch (err) {
-    db.run('ROLLBACK');
+    rollbackTransaction();
     console.error('Review action failed:', err.message);
     return res.status(500).json({ error: 'Review action failed — please try again' });
   }
@@ -373,10 +372,8 @@ router.post('/questions/:id/analyze', (req, res) => {
 // GET /faculty/tags — list all tags with usage counts
 router.get('/tags', (req, res) => {
   const tags = queryAll(`
-    SELECT t.*, u.name as created_by_name,
-           (SELECT COUNT(*) FROM faq_tag_applications WHERE tag_id = t.id) as usage_count
+    SELECT t.name, t.color, t.usage_count
     FROM faq_tags t
-    LEFT JOIN users u ON t.created_by = u.id
     ORDER BY t.usage_count DESC, t.name ASC
   `);
   res.json({ tags });
@@ -388,29 +385,28 @@ router.post('/tags', (req, res) => {
   if (!name || !name.trim()) return res.status(400).json({ error: 'Tag name is required' });
   if (name.length > 40) return res.status(400).json({ error: 'Tag name must be ≤40 characters' });
 
-  const existing = queryOne('SELECT id FROM faq_tags WHERE LOWER(name) = LOWER(?)', [name.trim()]);
+  const existing = queryOne('SELECT name FROM faq_tags WHERE LOWER(name) = LOWER(?)', [name.trim()]);
   if (existing) return res.status(409).json({ error: 'A tag with this name already exists' });
 
-  const id = uuidv4();
   run(
-    'INSERT INTO faq_tags (id, name, color, description, created_by, created_at, usage_count) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [id, name.trim(), color || '#6366f1', description || null, req.user.id, Date.now(), 0]
+    'INSERT INTO faq_tags (name, color, usage_count) VALUES (?, ?, ?)',
+    [name.trim(), color || '#6366f1', 0]
   );
 
-  audit('tag.created', 'faq_tag', id, `Tag "${name}" created`);
+  audit('tag.created', 'faq_tag', name.trim(), `Tag "${name}" created`);
 
-  const tag = queryOne('SELECT * FROM faq_tags WHERE id = ?', [id]);
+  const tag = queryOne('SELECT * FROM faq_tags WHERE name = ?', [name.trim()]);
   res.status(201).json({ tag });
 });
 
 // DELETE /faculty/tags/:tagId — delete a tag (removes applications)
 router.delete('/tags/:tagId', (req, res) => {
-  const tag = queryOne('SELECT * FROM faq_tags WHERE id = ?', [req.params.tagId]);
+  const tag = queryOne('SELECT * FROM faq_tags WHERE name = ?', [req.params.tagId]);
   if (!tag) return res.status(404).json({ error: 'Tag not found' });
 
   // Remove all applications first (FK cascade should handle this, but be explicit)
   run('DELETE FROM faq_tag_applications WHERE tag_id = ?', [req.params.tagId]);
-  run('DELETE FROM faq_tags WHERE id = ?', [req.params.tagId]);
+  run('DELETE FROM faq_tags WHERE name = ?', [req.params.tagId]);
 
   audit('tag.deleted', 'faq_tag', req.params.tagId, `Tag "${tag.name}" deleted`);
 
@@ -427,18 +423,19 @@ router.post('/tags/apply/:questionId', (req, res) => {
   if (!question) return res.status(404).json({ error: 'Question not found' });
 
   const db = getDb();
-  db.run('BEGIN IMMEDIATE');
+  beginTransaction();
   try {
     for (const tagId of tag_ids) {
-      const tag = queryOne('SELECT id FROM faq_tags WHERE id = ?', [tagId]);
-      if (!tag) { db.run('ROLLBACK'); return res.status(400).json({ error: `Tag ${tagId} not found` }); }
+      if (!tagId) { rollbackTransaction(); return res.status(400).json({ error: 'Invalid tag_id: null or undefined' }); }
+      const tag = queryOne('SELECT name FROM faq_tags WHERE name = ?', [tagId]);
+      if (!tag) { rollbackTransaction(); return res.status(400).json({ error: `Tag "${tagId}" not found` }); }
 
       try {
         run(
           'INSERT INTO faq_tag_applications (question_id, tag_id, applied_by, applied_at) VALUES (?, ?, ?, ?)',
           [req.params.questionId, tagId, req.user.id, Date.now()]
         );
-        run('UPDATE faq_tags SET usage_count = usage_count + 1 WHERE id = ?', [tagId]);
+        run('UPDATE faq_tags SET usage_count = usage_count + 1 WHERE name = ?', [tagId]);
       } catch (e) {
         if (e.message.includes('UNIQUE constraint')) {
           continue; // already applied
@@ -446,9 +443,9 @@ router.post('/tags/apply/:questionId', (req, res) => {
         throw e;
       }
     }
-    db.run('COMMIT');
+    commitTransaction();
   } catch (err) {
-    db.run('ROLLBACK');
+    rollbackTransaction();
     return res.status(500).json({ error: 'Failed to apply tags: ' + err.message });
   }
 
@@ -456,8 +453,8 @@ router.post('/tags/apply/:questionId', (req, res) => {
 
   // Return updated tags
   const tags = queryAll(`
-    SELECT t.id, t.name, t.color FROM faq_tags t
-    JOIN faq_tag_applications ta ON ta.tag_id = t.id
+    SELECT t.name, t.color FROM faq_tags t
+    JOIN faq_tag_applications ta ON ta.tag_id = t.name
     WHERE ta.question_id = ?
   `, [req.params.questionId]);
 
@@ -473,7 +470,7 @@ router.delete('/tags/remove/:questionId/:tagId', (req, res) => {
   if (!app) return res.status(404).json({ error: 'Tag not applied to this question' });
 
   run('DELETE FROM faq_tag_applications WHERE question_id = ? AND tag_id = ?', [req.params.questionId, req.params.tagId]);
-  run('UPDATE faq_tags SET usage_count = MAX(0, usage_count - 1) WHERE id = ?', [req.params.tagId]);
+  run('UPDATE faq_tags SET usage_count = MAX(0, usage_count - 1) WHERE name = ?', [req.params.tagId]);
 
   audit('faq.tag_removed', 'question', req.params.questionId, `Tag ${req.params.tagId} removed`);
 
@@ -495,7 +492,7 @@ router.post('/bulk-action', (req, res) => {
   }
 
   const db = getDb();
-  db.run('BEGIN IMMEDIATE');
+  beginTransaction();
   let processed = 0;
   let errors = [];
 
@@ -511,9 +508,9 @@ router.post('/bulk-action', (req, res) => {
       );
       processed++;
     }
-    db.run('COMMIT');
+    commitTransaction();
   } catch (err) {
-    db.run('ROLLBACK');
+    rollbackTransaction();
     return res.status(500).json({ error: 'Bulk action failed: ' + err.message, processed, errors });
   }
 
@@ -834,35 +831,46 @@ export function checkAutoPromote(questionId) {
 
 function upsertAIAnalysis(questionId, analysis) {
   const {
-    quality: { score: quality_score, summary: quality_summary, factors },
-    duplicates,
+    quality: { score: quality_score },
     similar_faqs,
     moderation,
-    confidence: ai_confidence,
+    confidence,
   } = analysis;
 
-  const existing = queryOne('SELECT question_id FROM faq_ai_analysis WHERE question_id = ?', [questionId]);
+  // Fetch question data for the required title/description/category columns
+  const question = queryOne('SELECT title, description, category FROM questions WHERE id = ?', [questionId]);
+  const faqTitle       = question?.title       || '';
+  const faqDescription = question?.description || '';
+  const category       = question?.category    || '';
 
-  const dupJson    = JSON.stringify(duplicates);
-  const similarJson = JSON.stringify(similar_faqs);
-  const modJson    = JSON.stringify(moderation);
-  const factorsJson = JSON.stringify(factors);
+  const similarFaqIds = (similar_faqs || []).map(s => s.id);
+  const similarScores = (similar_faqs || []).map(s => s.similarity);
+  const flagReasons   = (moderation  || []).map(f => f.flag);
+
+  const existing = queryOne('SELECT question_id FROM faq_ai_analysis WHERE question_id = ?', [questionId]);
 
   if (existing) {
     run(
       `UPDATE faq_ai_analysis SET
-         ai_quality_score=?, ai_quality_summary=?, ai_confidence=?,
-         duplicate_faqs=?, similar_faqs=?, moderation_flags=?, quality_factors=?,
-         analyzed_at=? WHERE question_id=?`,
-      [quality_score, quality_summary, ai_confidence, dupJson, similarJson, modJson, factorsJson, Date.now(), questionId]
+         generated_at=?, confidence=?, quality_score=?,
+         faq_title=?, faq_description=?, category=?,
+         similar_faq_ids=?, similar_scores=?, flag_reasons=?
+       WHERE question_id=?`,
+      [Date.now(), confidence, quality_score,
+       faqTitle, faqDescription, category,
+       JSON.stringify(similarFaqIds), JSON.stringify(similarScores), JSON.stringify(flagReasons),
+       questionId]
     );
   } else {
     run(
       `INSERT INTO faq_ai_analysis
-         (question_id, ai_quality_score, ai_quality_summary, ai_confidence,
-          duplicate_faqs, similar_faqs, moderation_flags, quality_factors, analyzed_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [questionId, quality_score, quality_summary, ai_confidence, dupJson, similarJson, modJson, factorsJson, Date.now()]
+         (question_id, generated_at, confidence, quality_score,
+          faq_title, faq_description, category,
+          similar_faq_ids, similar_scores, flag_reasons)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [questionId, Date.now(), confidence, quality_score,
+       faqTitle, faqDescription, category,
+       JSON.stringify(similarFaqIds), JSON.stringify(similarScores), JSON.stringify(flagReasons)]
     );
   }
 }
@@ -883,6 +891,7 @@ const SP_ACTIONS = {
   sp_purchase:            { label: 'SP Purchase',             points: 0  },
   sp_adjustment:          { label: 'Manual Adjustment',       points: 0  },
   account_frozen:         { label: 'Account Frozen',          points: -50},
+  account_unfrozen:       { label: 'Account Unfrozen',        points: 0  },
 };
 
 // ── GET /faculty/interns/overview ────────────────────────────────────────────
@@ -1054,6 +1063,103 @@ router.get('/interns/anomalies', (req, res) => {
     page: Number(page),
     totalPages: Math.ceil(total / limit),
   });
+});
+
+// ── GET /faculty/students/stats ───────────────────────────────────────────────
+// NOTE: This route MUST be defined before /interns/:id to prevent Express from
+// matching /interns/stats as /interns/:id (treating 'stats' as the :id param).
+router.get('/interns/stats', (req, res) => {
+  const { user_id, days = 30 } = req.query;
+  const since = Date.now() - Number(days) * 24 * 3600 * 1000;
+
+  const baseWhere = user_id ? 'sl.user_id = ? AND' : '';
+  const baseParams = user_id ? [user_id] : [];
+
+  // SP net change over period
+  const netChange = queryOne(
+    `SELECT COALESCE(SUM(points), 0) as net FROM sp_ledger sl WHERE ${baseWhere} sl.created_at >= ?`,
+    [...baseParams, since]
+  )?.net || 0;
+
+  // Daily SP delta for trend chart
+  const dailyDelta = queryAll(`
+    SELECT
+      DATE(sl.created_at / 1000, 'unixepoch') as day,
+      SUM(sl.points) as total_delta,
+      COUNT(*) as transaction_count
+    FROM sp_ledger sl
+    WHERE ${baseWhere} sl.created_at >= ?
+    GROUP BY day
+    ORDER BY day ASC
+  `, [...baseParams, since]);
+
+  // Breakdown by action type
+  const byAction = queryAll(`
+    SELECT sl.action_type, SUM(sl.points) as total_delta, COUNT(*) as count
+    FROM sp_ledger sl
+    WHERE ${baseWhere} sl.created_at >= ?
+    GROUP BY sl.action_type
+    ORDER BY total_delta DESC
+  `, [...baseParams, since]);
+
+  // Top reference IDs (most active questions/answers)
+  const topRefs = queryAll(`
+    SELECT sl.reference_type, sl.reference_id, COUNT(*) as count, SUM(sl.points) as total_sp
+    FROM sp_ledger sl
+    WHERE ${baseWhere} sl.created_at >= ? AND sl.reference_id IS NOT NULL
+    GROUP BY sl.reference_type, sl.reference_id
+    ORDER BY total_sp DESC LIMIT 10
+  `, [...baseParams, since]);
+
+  // Anomaly spike detection: days where net change is > 3 std dev from mean
+  const spikes = queryAll(`
+    SELECT DATE(sl.created_at / 1000, 'unixepoch') as day, SUM(sl.points) as total
+    FROM sp_ledger sl
+    WHERE ${baseWhere} sl.created_at >= ?
+    GROUP BY day
+    HAVING total > 50 OR total < -30
+    ORDER BY day DESC
+  `, [...baseParams, since]);
+
+  res.json({
+    netChange, dailyDelta, byAction, topRefs, spikes,
+    actionLabels: SP_ACTIONS,
+  });
+});
+
+// ── GET /faculty/interns/:id/stats ─────────────────────────────────────────────
+router.get('/interns/:id/stats', (req, res) => {
+  const { days = 30 } = req.query;
+  const since = Date.now() - Number(days) * 24 * 3600 * 1000;
+
+  const student = queryOne('SELECT id, name, reputation, is_frozen FROM users WHERE id = ? AND role IN ("student","intern")', [req.params.id]);
+  if (!student) return res.status(404).json({ error: 'Intern not found' });
+
+  const netChange = queryOne(
+    'SELECT COALESCE(SUM(points), 0) as net FROM sp_ledger WHERE user_id = ? AND created_at >= ?',
+    [req.params.id, since]
+  )?.net || 0;
+
+  const dailyDelta = queryAll(`
+    SELECT DATE(created_at / 1000, 'unixepoch') as day, SUM(points) as total_delta, COUNT(*) as transaction_count
+    FROM sp_ledger WHERE user_id = ? AND created_at >= ?
+    GROUP BY day ORDER BY day ASC
+  `, [req.params.id, since]);
+
+  const byAction = queryAll(`
+    SELECT action_type, SUM(points) as total_delta, COUNT(*) as count
+    FROM sp_ledger WHERE user_id = ? AND created_at >= ?
+    GROUP BY action_type ORDER BY total_delta DESC
+  `, [req.params.id, since]);
+
+  const recentLedger = queryAll(`
+    SELECT id, action_type, points, balance_after, description, created_at
+    FROM sp_ledger WHERE user_id = ? ORDER BY created_at DESC LIMIT 20
+  `, [req.params.id]);
+
+  res.json({ ...student, netChange, dailyDelta, byAction, recentLedger, actionLabels: SP_ACTIONS });
+});
+
 router.get('/interns/:id', (req, res) => {
   const student = queryOne(`
     SELECT u.id, u.name, u.email, u.reputation, u.is_frozen,
@@ -1120,20 +1226,24 @@ router.post('/interns/:id/adjust', (req, res) => {
 
   const newBalance = student.reputation + delta;
   const nowMs = Date.now();
+  const ledgerId = uuidv4();
+  const anomalyId = uuidv4();
 
   run('UPDATE users SET reputation = ? WHERE id = ?', [newBalance, req.params.id]);
   run(
     `INSERT INTO sp_ledger (id, user_id, action_type, points, balance_after, reference_id, reference_type, description, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [uuidv4(), req.params.id, 'sp_adjustment', delta, newBalance, null, null, `Manual adjustment: ${reason}`, nowMs]
+    [ledgerId, req.params.id, 'sp_adjustment', delta, newBalance, null, null, `Manual adjustment: ${reason}`, nowMs]
   );
   run(
     'INSERT INTO sp_adjustments (id, user_id, faculty_id, points_delta, reason, created_at) VALUES (?, ?, ?, ?, ?, ?)',
     [uuidv4(), req.params.id, req.user.id, delta, reason, nowMs]
   );
+  // anomaly_score: 0.5 for manual faculty adjustments (low-risk). ledger_entry_id references
+  // the ledger entry above. flags='manual' marks this as faculty-initiated.
   run(
-    'INSERT INTO sp_anomaly_events (id, user_id, anomaly_type, severity, status, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [uuidv4(), req.params.id, 'manual_adjustment', delta < 0 ? 'high' : 'medium', 'resolved', `Faculty ${delta > 0 ? 'added' : 'deducted'} ${Math.abs(delta)} SP: ${reason}`, nowMs]
+    'INSERT INTO sp_anomaly_events (id, user_id, ledger_entry_id, anomaly_score, flags, anomaly_type, severity, status, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [anomalyId, req.params.id, ledgerId, 0.5, 'manual', 'manual_adjustment', delta < 0 ? 'high' : 'medium', 'resolved', `Faculty ${delta > 0 ? 'added' : 'deducted'} ${Math.abs(delta)} SP: ${reason}`, nowMs]
   );
 
   audit(`sp.adjust`, 'user', req.params.id, `delta=${delta}, reason=${reason}`, { points_delta: delta, new_balance: newBalance });
@@ -1149,12 +1259,13 @@ router.post('/interns/:id/freeze', (req, res) => {
   if (student.is_frozen) return res.status(409).json({ error: 'Account is already frozen' });
 
   const nowMs = Date.now();
+  const currentBalance = queryOne('SELECT reputation FROM users WHERE id = ?', [req.params.id])?.reputation || 0;
   run('UPDATE users SET is_frozen = 1, frozen_by = ?, frozen_at = ? WHERE id = ?', [req.user.id, nowMs, req.params.id]);
 
   run(
     `INSERT INTO sp_ledger (id, user_id, action_type, points, balance_after, reference_id, reference_type, description, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [uuidv4(), req.params.id, 'account_frozen', -50, queryOne('SELECT reputation FROM users WHERE id = ?', [req.params.id])?.reputation || 0, null, null, 'Account frozen by faculty', nowMs]
+    [uuidv4(), req.params.id, 'account_frozen', -50, currentBalance, null, null, 'Account frozen by faculty', nowMs]
   );
 
   audit(`sp.freeze`, 'user', req.params.id, null, { frozen_by: req.user.id });
@@ -1168,7 +1279,14 @@ router.post('/interns/:id/unfreeze', (req, res) => {
   if (!student) return res.status(404).json({ error: 'Intern not found' });
   if (!student.is_frozen) return res.status(409).json({ error: 'Account is not frozen' });
 
+  const currentBalance = queryOne('SELECT reputation FROM users WHERE id = ?', [req.params.id])?.reputation || 0;
   run('UPDATE users SET is_frozen = 0, frozen_by = NULL, frozen_at = NULL WHERE id = ?', [req.params.id]);
+
+  run(
+    `INSERT INTO sp_ledger (id, user_id, action_type, points, balance_after, reference_id, reference_type, description, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [uuidv4(), req.params.id, 'account_unfrozen', 0, currentBalance, null, null, 'Account unfrozen by faculty', Date.now()]
+  );
 
   audit(`sp.unfreeze`, 'user', req.params.id, null, {});
 
@@ -1236,30 +1354,31 @@ router.get('/interns/:id/adjustments', (req, res) => {
 
 // ── POST /faculty/students/watchlist ──────────────────────────────────────────
 router.post('/interns/watchlist', (req, res) => {
-  const { user_id, priority = 'medium', notes } = req.body;
+  const { user_id, priority = 'normal', notes, reason = 'manual' } = req.body;
   if (!user_id) return res.status(400).json({ error: 'user_id is required' });
 
   const student = queryOne('SELECT id, name FROM users WHERE id = ? AND role IN ("student","intern")', [user_id]);
   if (!student) return res.status(404).json({ error: 'Intern not found' });
 
-  const existing = queryOne('SELECT id FROM sp_watchlist WHERE user_id = ?', [user_id]);
+  // sp_watchlist has user_id as PRIMARY KEY — no separate 'id' column
+  const existing = queryOne('SELECT user_id FROM sp_watchlist WHERE user_id = ?', [user_id]);
   if (existing) return res.status(409).json({ error: 'Intern is already on the watchlist' });
 
-  const id = uuidv4();
   const nowMs = Date.now();
   run(
-    'INSERT INTO sp_watchlist (id, user_id, priority, notes, added_by, added_at) VALUES (?, ?, ?, ?, ?, ?)',
-    [id, user_id, priority, notes || null, req.user.id, nowMs]
+    'INSERT INTO sp_watchlist (user_id, added_by, reason, priority, notes, added_at) VALUES (?, ?, ?, ?, ?, ?)',
+    [user_id, req.user.id, reason, priority, notes || null, nowMs]
   );
 
   audit('sp.watchlist_add', 'user', user_id, notes || null, { priority });
 
-  res.status(201).json({ success: true, id, message: `${student.name} added to watchlist` });
+  res.status(201).json({ success: true, user_id, message: `${student.name} added to watchlist` });
 });
 
 // ── DELETE /faculty/students/watchlist/:userId ────────────────────────────────
 router.delete('/interns/watchlist/:userId', (req, res) => {
-  const entry = queryOne('SELECT id, user_id FROM sp_watchlist WHERE user_id = ?', [req.params.userId]);
+  // sp_watchlist has user_id as PRIMARY KEY — no separate 'id' column
+  const entry = queryOne('SELECT user_id FROM sp_watchlist WHERE user_id = ?', [req.params.userId]);
   if (!entry) return res.status(404).json({ error: 'Watchlist entry not found' });
 
   run('DELETE FROM sp_watchlist WHERE user_id = ?', [req.params.userId]);
@@ -1280,75 +1399,13 @@ router.post('/interns/anomalies/:id/resolve', (req, res) => {
   if (!event) return res.status(404).json({ error: 'Anomaly event not found' });
 
   const nowMs = Date.now();
-  run('UPDATE sp_anomaly_events SET status = ?, resolved_by = ?, resolved_at = ?, notes = ? WHERE id = ?',
+  run('UPDATE sp_anomaly_events SET status = ?, resolved_by = ?, resolved_at = ?, resolution_notes = ? WHERE id = ?',
     [status, req.user.id, nowMs, notes || null, req.params.id]);
 
   audit(`sp.anomaly.${status}`, 'sp_anomaly_event', req.params.id, notes || null, { user_id: event.user_id });
 
   const updated = queryOne('SELECT * FROM sp_anomaly_events WHERE id = ?', [req.params.id]);
   res.json({ success: true, event: { ...updated, created_at: updated?.created_at ? new Date(updated.created_at).toISOString() : null, resolved_at: updated?.resolved_at ? new Date(updated.resolved_at).toISOString() : null } });
-});
-
-// ── GET /faculty/students/stats ───────────────────────────────────────────────
-router.get('/interns/stats', (req, res) => {
-  const { user_id, days = 30 } = req.query;
-  const since = Date.now() - Number(days) * 24 * 3600 * 1000;
-
-  const baseWhere = user_id ? 'sl.user_id = ? AND' : '';
-  const baseParams = user_id ? [user_id] : [];
-
-  // SP net change over period
-  const netChange = queryOne(
-    `SELECT COALESCE(SUM(points), 0) as net FROM sp_ledger sl WHERE ${baseWhere} sl.created_at >= ?`,
-    [...baseParams, since]
-  )?.net || 0;
-
-  // Daily SP delta for trend chart
-  const dailyDelta = queryAll(`
-    SELECT
-      DATE(created_at / 1000, 'unixepoch') as day,
-      SUM(points) as total_delta,
-      COUNT(*) as transaction_count
-    FROM sp_ledger
-    WHERE ${baseWhere} created_at >= ?
-    GROUP BY day
-    ORDER BY day ASC
-  `, [...baseParams, since]);
-
-  // Breakdown by action type
-  const byAction = queryAll(`
-    SELECT action_type, SUM(points) as total_delta, COUNT(*) as count
-    FROM sp_ledger
-    WHERE ${baseWhere} created_at >= ?
-    GROUP BY action_type
-    ORDER BY total_delta DESC
-  `, [...baseParams, since]);
-
-  // Top reference IDs (most active questions/answers)
-  const topRefs = queryAll(`
-    SELECT reference_type, reference_id, COUNT(*) as count, SUM(points) as total_sp
-    FROM sp_ledger
-    WHERE ${baseWhere} created_at >= ? AND reference_id IS NOT NULL
-    GROUP BY reference_type, reference_id
-    ORDER BY total_sp DESC LIMIT 10
-  `, [...baseParams, since]);
-
-  // Anomaly spike detection: days where net change is > 3 std dev from mean
-  const spikes = queryAll(`
-    SELECT DATE(created_at / 1000, 'unixepoch') as day, SUM(points) as total
-    FROM sp_ledger
-    WHERE ${baseWhere} created_at >= ?
-    GROUP BY day
-    HAVING total > 50 OR total < -30
-    ORDER BY day DESC
-  `, [...baseParams, since]);
-
-  res.json({
-    netChange, dailyDelta, byAction, topRefs, spikes,
-    actionLabels: SP_ACTIONS,
-  });
-});
-
 });
 
 export default router;

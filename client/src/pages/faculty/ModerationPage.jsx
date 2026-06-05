@@ -16,16 +16,16 @@ const REASON_COLORS = {
   spam: '#f97316',
   inappropriate: '#ef4444',
   wrong_info: '#f59e0b',
-  duplicate: '#64748b',
+  duplicate: '#1e293b',
   too_vague: '#8b5cf6',
   offensive: '#dc2626',
-  other: '#94a3b8',
+  other: '#1e293b',
 };
 
 const STATUS_CONFIG = {
   open: { label: 'Open', color: '#ef4444', bg: '#fef2f2' },
   reviewed: { label: 'Reviewed', color: '#10b981', bg: '#f0fdf4' },
-  dismissed: { label: 'Dismissed', color: '#64748b', bg: '#f8fafc' },
+  dismissed: { label: 'Dismissed', color: '#1e293b', bg: '#f8fafc' },
 };
 
 function formatRelative(ms) {
@@ -136,7 +136,7 @@ export default function ModerationPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1e293b', margin: 0 }}>Content Moderation</h1>
-          <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0.25rem 0 0' }}>
+          <p style={{ fontSize: '0.8rem', color: '#1e293b', margin: '0.25rem 0 0' }}>
             Review and act on community-reported content
           </p>
         </div>
@@ -148,7 +148,7 @@ export default function ModerationPage() {
           {[
             { label: 'Open Flags', value: stats.open, icon: '🚩', color: '#ef4444' },
             { label: 'Reviewed', value: stats.reviewed, icon: '✅', color: '#10b981' },
-            { label: 'Dismissed', value: stats.dismissed, icon: '🙈', color: '#64748b' },
+            { label: 'Dismissed', value: stats.dismissed, icon: '🙈', color: '#1e293b' },
             { label: 'Resolved (7d)', value: stats.resolved7d, icon: '🗓️', color: '#3b82f6' },
           ].map(s => (
             <div key={s.label} style={{
@@ -156,7 +156,7 @@ export default function ModerationPage() {
               border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
               flex: '1 1 120px',
             }}>
-              <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginBottom: '0.25rem' }}>{s.label}</div>
+              <div style={{ fontSize: '0.7rem', color: '#1e293b', marginBottom: '0.25rem' }}>{s.label}</div>
               <div style={{ fontSize: '1.5rem', fontWeight: 700, color: s.color }}>{s.value}</div>
             </div>
           ))}
@@ -193,7 +193,7 @@ export default function ModerationPage() {
 
       {/* Filter bar */}
       <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Status:</span>
+        <span style={{ fontSize: '0.8rem', color: '#1e293b' }}>Status:</span>
         {['open', 'reviewed', 'dismissed'].map(s => {
           const cfg = STATUS_CONFIG[s];
           return (
@@ -203,7 +203,7 @@ export default function ModerationPage() {
               style={{
                 padding: '0.3rem 0.75rem',
                 background: status === s ? cfg.color : '#f1f5f9',
-                color: status === s ? '#fff' : '#334155',
+                color: status === s ? '#fff' : '#1e293b',
                 border: 'none', borderRadius: 20, fontSize: '0.75rem', cursor: 'pointer',
                 fontWeight: status === s ? 600 : 400,
               }}
@@ -213,7 +213,7 @@ export default function ModerationPage() {
           );
         })}
 
-        <span style={{ fontSize: '0.8rem', color: '#64748b', marginLeft: '0.5rem' }}>Type:</span>
+        <span style={{ fontSize: '0.8rem', color: '#1e293b', marginLeft: '0.5rem' }}>Type:</span>
         {[{ val: '', label: 'All' }, { val: 'question', label: 'Questions' }, { val: 'answer', label: 'Answers' }].map(t => (
           <button
             key={t.val}
@@ -221,7 +221,7 @@ export default function ModerationPage() {
             style={{
               padding: '0.3rem 0.75rem',
               background: targetType === t.val ? '#3b82f6' : '#f1f5f9',
-              color: targetType === t.val ? '#fff' : '#334155',
+              color: targetType === t.val ? '#fff' : '#1e293b',
               border: 'none', borderRadius: 20, fontSize: '0.75rem', cursor: 'pointer',
             }}
           >
@@ -236,7 +236,7 @@ export default function ModerationPage() {
           background: '#1e293b', borderRadius: 8, padding: '0.75rem 1rem',
           display: 'flex', gap: '0.75rem', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap',
         }}>
-          <span style={{ color: '#e2e8f0', fontSize: '0.85rem', fontWeight: 600 }}>
+          <span style={{ color: '#cbd5e1', fontSize: '0.85rem', fontWeight: 600 }}>
             {selectedIds.length} selected
           </span>
           <input
@@ -247,14 +247,14 @@ export default function ModerationPage() {
             style={{
               flex: 1, minWidth: 200, padding: '0.4rem 0.75rem',
               border: '1px solid #334155', borderRadius: 6,
-              fontSize: '0.8rem', background: '#0f172a', color: '#e2e8f0',
+              fontSize: '0.8rem', background: '#0f172a', color: '#cbd5e1',
             }}
           />
           <button
             onClick={handleBulkDismiss}
             disabled={dismissing}
             style={{
-              padding: '0.4rem 1rem', background: '#64748b', color: '#fff',
+              padding: '0.4rem 1rem', background: '#1e293b', color: '#fff',
               border: 'none', borderRadius: 6, fontSize: '0.8rem', cursor: 'pointer',
             }}
           >
@@ -263,7 +263,7 @@ export default function ModerationPage() {
           <button
             onClick={() => setSelectedIds([])}
             style={{
-              padding: '0.4rem 0.75rem', background: '#334155', color: '#94a3b8',
+              padding: '0.4rem 0.75rem', background: '#1e293b', color: '#1e293b',
               border: 'none', borderRadius: 6, fontSize: '0.8rem', cursor: 'pointer',
             }}
           >
@@ -279,21 +279,21 @@ export default function ModerationPage() {
       )}
 
       {loading ? (
-        <div style={{ textAlign: 'center', color: '#666', padding: '3rem' }}>Loading moderation queue...</div>
+        <div style={{ textAlign: 'center', color: '#1e293b', padding: '3rem' }}>Loading moderation queue...</div>
       ) : (
         <>
-          <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '0.75rem' }}>
+          <div style={{ fontSize: '0.8rem', color: '#1e293b', marginBottom: '0.75rem' }}>
             {queue?.total || 0} flag{queue?.total !== 1 ? 's' : ''}
           </div>
 
           {queue?.flags.length === 0 ? (
-            <div style={{ textAlign: 'center', color: '#94a3b8', padding: '4rem', fontSize: '0.9rem' }}>
+            <div style={{ textAlign: 'center', color: '#1e293b', padding: '4rem', fontSize: '0.9rem' }}>
               ✅ No flags in this queue.
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {/* Select all */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#64748b' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#1e293b' }}>
                 <input
                   type="checkbox"
                   checked={queue && selectedIds.length === queue.flags.length && queue.flags.length > 0}
@@ -303,8 +303,8 @@ export default function ModerationPage() {
               </div>
 
               {queue?.flags.map(flag => {
-                const statusCfg = STATUS_CONFIG[flag.status] || { label: flag.status, color: '#64748b', bg: '#f8fafc' };
-                const reasonColor = REASON_COLORS[flag.reason] || '#94a3b8';
+                const statusCfg = STATUS_CONFIG[flag.status] || { label: flag.status, color: '#1e293b', bg: '#f8fafc' };
+                const reasonColor = REASON_COLORS[flag.reason] || '#1e293b';
                 const isSelected = selectedIds.includes(flag.id);
 
                 return (
@@ -312,7 +312,7 @@ export default function ModerationPage() {
                     key={flag.id}
                     style={{
                       background: isSelected ? '#f0f9ff' : '#fff',
-                      border: `1px solid ${isSelected ? '#93c5fd' : '#e2e8f0'}`,
+                      border: `1px solid ${isSelected ? '#93c5fd' : '#cbd5e1'}`,
                       borderRadius: 10, padding: '1rem 1.25rem',
                       boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
                       transition: 'all 0.15s',
@@ -353,7 +353,7 @@ export default function ModerationPage() {
                           )}
                           <span style={{
                             padding: '0.15rem 0.5rem', borderRadius: 4, fontSize: '0.7rem',
-                            background: '#f1f5f9', color: '#64748b',
+                            background: '#f1f5f9', color: '#1e293b',
                           }}>
                             {flag.target_type}
                           </span>
@@ -365,7 +365,7 @@ export default function ModerationPage() {
                         </div>
 
                         {/* Meta row */}
-                        <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', color: '#64748b', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', color: '#1e293b', flexWrap: 'wrap' }}>
                           <span>👤 {flag.author_name}</span>
                           <span>📂 {flag.question_category}</span>
                           <span>📌 Flagged by {flag.flagged_by_name}</span>
@@ -377,7 +377,7 @@ export default function ModerationPage() {
                         {flag.details && (
                           <div style={{
                             marginTop: '0.5rem', padding: '0.5rem 0.75rem',
-                            background: '#f8fafc', borderRadius: 6, fontSize: '0.8rem', color: '#475569',
+                            background: '#1e293b', borderRadius: 6, fontSize: '0.8rem', color: '#94a3b8',
                             fontStyle: 'italic',
                           }}>
                             "{flag.details}"
@@ -386,11 +386,11 @@ export default function ModerationPage() {
 
                         {/* Question status indicator */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
-                          <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Question status:</span>
+                          <span style={{ fontSize: '0.7rem', color: '#1e293b' }}>Question status:</span>
                           <span style={{
                             padding: '0.1rem 0.5rem', borderRadius: 4, fontSize: '0.7rem',
                             background: flag.question_status === 'published' ? '#dcfce7' : flag.question_status === 'pending_review' ? '#fef9c3' : '#f1f5f9',
-                            color: flag.question_status === 'published' ? '#166534' : flag.question_status === 'pending_review' ? '#854d0e' : '#475569',
+                            color: flag.question_status === 'published' ? '#166534' : flag.question_status === 'pending_review' ? '#854d0e' : '#1e293b',
                           }}>
                             {flag.question_status}
                           </span>
@@ -403,7 +403,7 @@ export default function ModerationPage() {
                           <button
                             onClick={() => handleResolve(flag.id, 'dismissed_flag', '')}
                             style={{
-                              padding: '0.35rem 0.75rem', background: '#f1f5f9', color: '#334155',
+                              padding: '0.35rem 0.75rem', background: '#1e293b', color: '#94a3b8',
                               border: '1px solid #e2e8f0', borderRadius: 6, fontSize: '0.75rem', cursor: 'pointer',
                             }}
                           >
@@ -454,13 +454,13 @@ export default function ModerationPage() {
                 disabled={page <= 1}
                 style={{
                   padding: '0.4rem 0.875rem', background: page <= 1 ? '#f1f5f9' : '#fff',
-                  color: page <= 1 ? '#94a3b8' : '#334155',
+                  color: page <= 1 ? '#1e293b' : '#1e293b',
                   border: '1px solid #e2e8f0', borderRadius: 6, fontSize: '0.8rem', cursor: page <= 1 ? 'not-allowed' : 'pointer',
                 }}
               >
                 ← Prev
               </button>
-              <span style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem', color: '#64748b' }}>
+              <span style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem', color: '#1e293b' }}>
                 Page {page} of {queue.totalPages}
               </span>
               <button
@@ -468,7 +468,7 @@ export default function ModerationPage() {
                 disabled={page >= queue.totalPages}
                 style={{
                   padding: '0.4rem 0.875rem', background: page >= queue.totalPages ? '#f1f5f9' : '#fff',
-                  color: page >= queue.totalPages ? '#94a3b8' : '#334155',
+                  color: page >= queue.totalPages ? '#1e293b' : '#1e293b',
                   border: '1px solid #e2e8f0', borderRadius: 6, fontSize: '0.8rem', cursor: page >= queue.totalPages ? 'not-allowed' : 'pointer',
                 }}
               >

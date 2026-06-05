@@ -101,7 +101,34 @@ export function getDb() {
   return db;
 }
 
+// Transaction guard — tracks whether we are inside a BEGIN IMMEDIATE transaction.
+// sql.js's db.export() auto-commits any open transaction, which breaks
+// rollback. We skip saveDb() while a transaction is active.
+let _inTransaction = false;
+
+export function inTransaction() { return _inTransaction; }
+
+export function beginTransaction() {
+  if (_inTransaction) throw new Error('Transaction already active');
+  _inTransaction = true;
+  db.run('BEGIN IMMEDIATE');
+}
+
+export function commitTransaction() {
+  if (!_inTransaction) return;
+  db.run('COMMIT');
+  _inTransaction = false;
+  saveDb();
+}
+
+export function rollbackTransaction() {
+  if (!_inTransaction) return;
+  db.run('ROLLBACK');
+  _inTransaction = false;
+}
+
 export function saveDb() {
+  if (_inTransaction) return; // cannot safely persist inside a BEGIN IMMEDIATE tx
   const data = db.export();
   const buffer = Buffer.from(data);
   fs.writeFileSync(DB_PATH, buffer);
@@ -120,10 +147,11 @@ async function seed() {
     { id: uuidv4(), name: 'Sneha Patel',     email: 'sneha@college.org',    reputation: 158 },
     { id: uuidv4(), name: 'Arjun Nair',      email: 'arjun@tech.edu',       reputation: 134 },
     { id: uuidv4(), name: 'Zara Khan',       email: 'zara@university.edu',  reputation: 97  },
+    { id: uuidv4(), name: 'Faculty Admin',   email: 'faculty@admin.com',    reputation: 0,   role: 'faculty' },
   ];
 
   const insertUser = db.prepare('INSERT INTO users (id, name, email, password_hash, role, is_verified, reputation) VALUES (?, ?, ?, ?, ?, ?, ?)');
-  for (const u of users) { insertUser.run([u.id, u.name, u.email, hash, 'intern', 1, u.reputation]); }
+  for (const u of users) { insertUser.run([u.id, u.name, u.email, hash, u.role || 'intern', 1, u.reputation]); }
   insertUser.free();
 
   const questionsData = [
@@ -230,5 +258,8 @@ export function queryOne(sql, params = []) {
 
 export function run(sql, params = []) {
   db.run(sql, params);
-  saveDb();
+  // Only auto-save when not inside a manual transaction.
+  // Call sites that open BEGIN IMMEDIATE are responsible for
+  // calling commitTransaction() or rollbackTransaction() explicitly.
+  if (!_inTransaction) saveDb();
 }

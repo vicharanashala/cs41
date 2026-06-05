@@ -8,8 +8,8 @@ const STATUS_LABELS = {
   published: { label: 'Published', color: '#10b981' },
   rejected: { label: 'Rejected', color: '#ef4444' },
   changes_requested: { label: 'Changes Requested', color: '#8b5cf6' },
-  merged: { label: 'Merged', color: '#64748b' },
-  unpublished: { label: 'Unpublished', color: '#94a3b8' },
+  merged: { label: 'Merged', color: '#1e293b' },
+  unpublished: { label: 'Unpublished', color: '#1e293b' },
 };
 
 const ACTION_LABELS = {
@@ -68,16 +68,18 @@ export default function QuestionReviewPage() {
   const [tagMsg, setTagMsg] = useState('');
 
   useEffect(() => {
+    setLoading(true);
+    setError(null);
     Promise.all([
-      getQuestion(id),
-      getQuestionAnswers(id),
-      getQuestionHistory(id),
+      getQuestion(id).catch(e => ({ question: null, _err: e })),
+      getQuestionAnswers(id).catch(e => ({ answers: [], _err: e })),
+      getQuestionHistory(id).catch(e => ({ history: [], _err: e })),
     ]).then(([q, a, h]) => {
-      setQuestion(q.question);
-      setAnswers(a.answers);
-      setHistory(h.history);
-    }).catch(e => setError(e.response?.data?.error || 'Failed to load question'))
-      .finally(() => setLoading(false));
+      if (q._err) { setError(q._err.response?.data?.error || 'Failed to load question'); }
+      else { setQuestion(q.question); }
+      setAnswers(a.answers ?? []);
+      setHistory(h.history ?? []);
+    }).finally(() => setLoading(false));
   }, [id]);
 
   const handleReview = async () => {
@@ -135,6 +137,7 @@ export default function QuestionReviewPage() {
   }, [question]);
 
   const handleApplyTag = async (tagId) => {
+    if (!tagId) return;
     setTagSaving(true);
     setTagError('');
     setTagMsg('');
@@ -150,12 +153,13 @@ export default function QuestionReviewPage() {
   };
 
   const handleRemoveTag = async (tagId) => {
+    if (!tagId) return;
     setTagSaving(true);
     setTagError('');
     setTagMsg('');
     try {
       await removeTag(id, tagId);
-      setQuestionTags(prev => prev.filter(t => t.id !== tagId));
+      setQuestionTags(prev => prev.filter(t => t.name !== tagId));
       setTagMsg('Tag removed.');
     } catch (e) {
       setTagError(e.response?.data?.error || 'Failed to remove tag.');
@@ -164,17 +168,17 @@ export default function QuestionReviewPage() {
     }
   };
 
-  if (loading) return <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>Loading question...</div>;
+  if (loading) return <div style={{ padding: '2rem', textAlign: 'center', color: '#1e293b' }}>Loading question...</div>;
   if (error && !question) return <div style={{ padding: '2rem', color: 'red' }}>❌ {error}</div>;
   if (!question) return null;
 
   const q = question;
-  const statusInfo = STATUS_LABELS[q.faq_status] || { label: q.faq_status, color: '#64748b' };
+  const statusInfo = STATUS_LABELS[q.faq_status] || { label: q.faq_status, color: '#1e293b' };
 
   return (
     <div style={{ padding: '2rem', maxWidth: 1100, margin: '0 auto' }}>
       {/* Back nav */}
-      <Link to="/faculty/queue" style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: 4, marginBottom: '1rem' }}>
+      <Link to="/faculty/queue" style={{ color: '#1e293b', textDecoration: 'none', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: 4, marginBottom: '1rem' }}>
         ← Back to Queue
       </Link>
 
@@ -192,12 +196,12 @@ export default function QuestionReviewPage() {
           {statusInfo.label}
         </span>
         {q.trigger && (
-          <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-            {q.trigger.event === 'upvote_threshold' ? '📈' : '🚩'} Triggered: <b>{q.trigger.event}</b> at <b>{q.trigger.upvotes}</b> upvotes · {formatRelative(q.trigger.at)}
+          <span style={{ fontSize: '0.8rem', color: '#1e293b' }}>
+            {q.trigger?.event === 'upvote_threshold' ? '📈' : '🚩'} Triggered: <b>{q.trigger?.event || '—'}</b> at <b>{q.trigger?.upvotes ?? '—'}</b> upvotes · {formatRelative(q.trigger?.at)}
           </span>
         )}
-        <span style={{ fontSize: '0.8rem', color: '#94a3b8', marginLeft: 'auto' }}>
-          ID: {q.id.slice(0, 8)}...
+        <span style={{ fontSize: '0.8rem', color: '#1e293b', marginLeft: 'auto' }}>
+          ID: {q.id ? q.id.slice(0, 8) + '...' : '—'}
         </span>
       </div>
 
@@ -216,7 +220,7 @@ export default function QuestionReviewPage() {
             padding: '0.5rem 1rem', textAlign: 'center', minWidth: 70,
           }}>
             <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b' }}>{m.value ?? 0}</div>
-            <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{m.icon} {m.label}</div>
+            <div style={{ fontSize: '0.7rem', color: '#1e293b' }}>{m.icon} {m.label}</div>
           </div>
         ))}
       </div>
@@ -226,13 +230,13 @@ export default function QuestionReviewPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {/* Question */}
           <div style={{ background: '#fff', borderRadius: 10, padding: '1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-            <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginBottom: '0.5rem' }}>QUESTION</div>
-            <h1 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.75rem', lineHeight: 1.4 }}>{q.title}</h1>
-            <div style={{ fontSize: '0.875rem', color: '#475569', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{q.description}</div>
+            <div style={{ fontSize: '0.7rem', color: '#1e293b', marginBottom: '0.5rem' }}>QUESTION</div>
+            <h1 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.75rem', lineHeight: 1.4 }}>{q.title || 'Untitled Question'}</h1>
+            <div style={{ fontSize: '0.875rem', color: '#1e293b', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{q.description || '—'}</div>
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', flexWrap: 'wrap' }}>
               {questionTags.map(t => (
                 <span
-                  key={t.id}
+                  key={t.name}
                   style={{
                     padding: '0.2rem 0.6rem',
                     background: (t.color || '#6366f1') + '20',
@@ -243,7 +247,7 @@ export default function QuestionReviewPage() {
                 >
                   {t.name}
                   <button
-                    onClick={() => handleRemoveTag(t.id)}
+                    onClick={() => handleRemoveTag(t.name)}
                     disabled={tagSaving}
                     style={{
                       marginLeft: '0.35rem', background: 'none', border: 'none',
@@ -257,13 +261,13 @@ export default function QuestionReviewPage() {
                 </span>
               ))}
               {questionTags.length === 0 && q.tags?.map(t => (
-                <span key={t} style={{ padding: '0.2rem 0.6rem', background: '#f1f5f9', borderRadius: 4, fontSize: '0.75rem', color: '#475569' }}>#{t}</span>
+                t?.name ? <span key={t.name} style={{ padding: '0.2rem 0.6rem', background: '#f1f5f9', borderRadius: 4, fontSize: '0.75rem', color: '#1e293b' }}>#{t.name}</span> : null
               ))}
             </div>
 
             {/* Tag management: apply more tags */}
             {tagLoading ? (
-              <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.625rem' }}>Loading tags…</div>
+              <div style={{ fontSize: '0.75rem', color: '#1e293b', marginTop: '0.625rem' }}>Loading tags…</div>
             ) : (
               <div style={{ marginTop: '0.75rem' }}>
                 {tagError && (
@@ -276,14 +280,14 @@ export default function QuestionReviewPage() {
                     ✅ {tagMsg}
                   </div>
                 )}
-                <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginBottom: '0.35rem' }}>Apply tag:</div>
+                <div style={{ fontSize: '0.7rem', color: '#1e293b', marginBottom: '0.35rem' }}>Apply tag:</div>
                 <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
                   {allTags
-                    .filter(t => !questionTags.find(qt => qt.id === t.id))
+                    .filter(t => t.name && !questionTags.find(qt => qt.name === t.name))
                     .map(t => (
                       <button
-                        key={t.id}
-                        onClick={() => handleApplyTag(t.id)}
+                        key={t.name}
+                        onClick={() => handleApplyTag(t.name)}
                         disabled={tagSaving}
                         style={{
                           padding: '0.2rem 0.5rem',
@@ -297,29 +301,29 @@ export default function QuestionReviewPage() {
                         + {t.name}
                       </button>
                     ))}
-                  {allTags.filter(t => !questionTags.find(qt => qt.id === t.id)).length === 0 && (
-                    <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontStyle: 'italic' }}>All tags applied</span>
+                  {allTags.filter(t => t.name && !questionTags.find(qt => qt.name === t.name)).length === 0 && (
+                    <span style={{ fontSize: '0.75rem', color: '#1e293b', fontStyle: 'italic' }}>All tags applied</span>
                   )}
                 </div>
               </div>
             )}
-            <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '1rem' }}>
+            <div style={{ fontSize: '0.75rem', color: '#1e293b', marginTop: '1rem' }}>
               Asked by <b>{q.author_name}</b> · {q.category} · {formatTime(q.created_at && q.created_at * 1000 || q.created_at)}
             </div>
           </div>
 
           {/* Answers */}
-          {answers.length > 0 && (
+          {Array.isArray(answers) && answers.length > 0 && (
             <div style={{ background: '#fff', borderRadius: 10, padding: '1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-              <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginBottom: '1rem' }}>ANSWERS ({answers.length})</div>
+              <div style={{ fontSize: '0.7rem', color: '#1e293b', marginBottom: '1rem' }}>ANSWERS ({answers.length})</div>
               {answers.map((a, i) => (
                 <div key={a.id} style={{ marginBottom: i < answers.length - 1 ? '1.25rem' : 0, paddingBottom: i < answers.length - 1 ? '1.25rem' : 0, borderBottom: i < answers.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
                   <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center' }}>
                     {a.is_accepted === 1 && <span style={{ fontSize: '0.75rem', background: '#10b98122', color: '#10b981', padding: '0.15rem 0.5rem', borderRadius: 4 }}>✓ Accepted</span>}
-                    <span style={{ fontSize: '0.75rem', color: '#64748b' }}>👤 {a.author_name}</span>
-                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>👍 {a.upvotes} 👎 {a.downvotes}</span>
+                    <span style={{ fontSize: '0.75rem', color: '#1e293b' }}>👤 {a.author_name}</span>
+                    <span style={{ fontSize: '0.75rem', color: '#1e293b' }}>👍 {a.upvotes} 👎 {a.downvotes}</span>
                   </div>
-                  <div style={{ fontSize: '0.875rem', color: '#334155', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{a.content}</div>
+                  <div style={{ fontSize: '0.875rem', color: '#1e293b', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{a.content}</div>
                 </div>
               ))}
             </div>
@@ -328,13 +332,13 @@ export default function QuestionReviewPage() {
           {/* AI Analysis */}
           <div style={{ background: '#fff', borderRadius: 10, padding: '1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.875rem' }}>
-              <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>AI ANALYSIS</div>
+              <div style={{ fontSize: '0.7rem', color: '#1e293b' }}>AI ANALYSIS</div>
               <button
                 onClick={handleAnalyze}
                 disabled={analyzing}
                 style={{
                   padding: '0.4rem 1rem',
-                  background: analyzing ? '#94a3b8' : '#6366f1',
+                  background: analyzing ? '#1e293b' : '#6366f1',
                   color: '#fff',
                   border: 'none',
                   borderRadius: 6,
@@ -363,7 +367,7 @@ export default function QuestionReviewPage() {
             )}
 
             {analyzing && (
-              <div style={{ textAlign: 'center', padding: '1.5rem', color: '#64748b', fontSize: '0.85rem' }}>
+              <div style={{ textAlign: 'center', padding: '1.5rem', color: '#1e293b', fontSize: '0.85rem' }}>
                 <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>🧠</div>
                 Processing question with AI analysis…
               </div>
@@ -374,8 +378,8 @@ export default function QuestionReviewPage() {
                 {/* Quality score */}
                 {analysisResult.quality_score != null && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <span style={{ fontSize: '0.75rem', color: '#64748b', minWidth: 90 }}>Quality</span>
-                    <div style={{ flex: 1, height: 8, background: '#e2e8f0', borderRadius: 4, overflow: 'hidden' }}>
+                    <span style={{ fontSize: '0.75rem', color: '#1e293b', minWidth: 90 }}>Quality</span>
+                    <div style={{ flex: 1, height: 8, background: '#cbd5e1', borderRadius: 4, overflow: 'hidden' }}>
                       <div style={{
                         width: `${Math.round(analysisResult.quality_score)}%`,
                         height: '100%',
@@ -390,8 +394,8 @@ export default function QuestionReviewPage() {
                 {/* Spam score */}
                 {analysisResult.spam_score != null && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <span style={{ fontSize: '0.75rem', color: '#64748b', minWidth: 90 }}>Spam Risk</span>
-                    <div style={{ flex: 1, height: 8, background: '#e2e8f0', borderRadius: 4, overflow: 'hidden' }}>
+                    <span style={{ fontSize: '0.75rem', color: '#1e293b', minWidth: 90 }}>Spam Risk</span>
+                    <div style={{ flex: 1, height: 8, background: '#cbd5e1', borderRadius: 4, overflow: 'hidden' }}>
                       <div style={{
                         width: `${Math.round(analysisResult.spam_score)}%`,
                         height: '100%',
@@ -406,7 +410,7 @@ export default function QuestionReviewPage() {
                 {/* Detected topics/tags */}
                 {analysisResult.detected_topics?.length > 0 && (
                   <div>
-                    <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block', marginBottom: '0.4rem' }}>Detected Topics</span>
+                    <span style={{ fontSize: '0.75rem', color: '#1e293b', display: 'block', marginBottom: '0.4rem' }}>Detected Topics</span>
                     <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                       {analysisResult.detected_topics.map(t => (
                         <span key={t} style={{ padding: '0.2rem 0.6rem', background: '#ede9fe', color: '#5b21b6', borderRadius: 4, fontSize: '0.75rem' }}>{t}</span>
@@ -418,7 +422,7 @@ export default function QuestionReviewPage() {
                 {/* Suggested tags */}
                 {analysisResult.suggested_tags?.length > 0 && (
                   <div>
-                    <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block', marginBottom: '0.4rem' }}>Suggested Tags</span>
+                    <span style={{ fontSize: '0.75rem', color: '#1e293b', display: 'block', marginBottom: '0.4rem' }}>Suggested Tags</span>
                     <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                       {analysisResult.suggested_tags.map(t => (
                         <span key={t} style={{ padding: '0.2rem 0.6rem', background: '#dbeafe', color: '#1e40af', borderRadius: 4, fontSize: '0.75rem' }}>+ {t}</span>
@@ -429,7 +433,7 @@ export default function QuestionReviewPage() {
 
                 {/* Summary / recommendation */}
                 {analysisResult.summary && (
-                  <div style={{ padding: '0.75rem', background: '#f8fafc', borderRadius: 6, fontSize: '0.8rem', color: '#475569', lineHeight: 1.6 }}>
+                  <div style={{ padding: '0.75rem', background: '#f8fafc', borderRadius: 6, fontSize: '0.8rem', color: '#1e293b', lineHeight: 1.6 }}>
                     {analysisResult.summary}
                   </div>
                 )}
@@ -437,29 +441,29 @@ export default function QuestionReviewPage() {
             )}
 
             {!analyzing && !analysisResult && (
-              <div style={{ color: '#94a3b8', fontSize: '0.8rem' }}>
+              <div style={{ color: '#1e293b', fontSize: '0.8rem' }}>
                 Click "Run AI Analysis" to assess question quality, spam risk, and topic detection.
               </div>
             )}
           </div>
 
           {/* Review history */}
-          {history.length > 0 && (
+          {Array.isArray(history) && history.length > 0 && (
             <div style={{ background: '#fff', borderRadius: 10, padding: '1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-              <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginBottom: '1rem' }}>REVIEW HISTORY ({history.length})</div>
+              <div style={{ fontSize: '0.7rem', color: '#1e293b', marginBottom: '1rem' }}>REVIEW HISTORY ({history.length})</div>
               {history.map((h, i) => (
                 <div key={h.id} style={{ display: 'flex', gap: '0.75rem', marginBottom: i < history.length - 1 ? '0.875rem' : 0 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#cbd5e1', marginTop: 5 }} />
-                    {i < history.length - 1 && <div style={{ width: 1, flex: 1, background: '#e2e8f0', marginTop: 3 }} />}
+                    {i < history.length - 1 && <div style={{ width: 1, flex: 1, background: '#cbd5e1', marginTop: 3 }} />}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#334155' }}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#1e293b' }}>
                       {ACTION_LABELS[h.action] || h.action}
-                      {h.reviewed_by === 'system' && <span style={{ fontSize: '0.7rem', color: '#94a3b8', marginLeft: 4 }}>(automated)</span>}
+                      {h.reviewed_by === 'system' && <span style={{ fontSize: '0.7rem', color: '#1e293b', marginLeft: 4 }}>(automated)</span>}
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{h.reviewed_by_name || h.reviewed_by} · {formatRelative(h.created_at)}</div>
-                    {h.notes && <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.2rem', fontStyle: 'italic' }}>{h.notes}</div>}
+                    <div style={{ fontSize: '0.75rem', color: '#1e293b' }}>{h.reviewed_by_name || h.reviewed_by} · {formatRelative(h.created_at)}</div>
+                    {h.notes && <div style={{ fontSize: '0.8rem', color: '#1e293b', marginTop: '0.2rem', fontStyle: 'italic' }}>{h.notes}</div>}
                   </div>
                 </div>
               ))}
@@ -470,7 +474,7 @@ export default function QuestionReviewPage() {
         {/* Right column: review action panel */}
         <div style={{ position: 'sticky', top: '1.5rem' }}>
           <div style={{ background: '#fff', borderRadius: 10, padding: '1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-            <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginBottom: '1rem', letterSpacing: '0.05em' }}>REVIEW ACTION</div>
+            <div style={{ fontSize: '0.7rem', color: '#1e293b', marginBottom: '1rem', letterSpacing: '0.05em' }}>REVIEW ACTION</div>
 
             {actionSuccess && (
               <div style={{ background: '#10b98115', border: '1px solid #10b98140', borderRadius: 6, padding: '0.75rem', color: '#10b981', fontSize: '0.85rem', marginBottom: '1rem' }}>
@@ -490,8 +494,8 @@ export default function QuestionReviewPage() {
                   style={{
                     padding: '0.625rem 1rem',
                     background: action === opt.val ? opt.color : '#f8fafc',
-                    color: action === opt.val ? '#fff' : '#334155',
-                    border: `1px solid ${action === opt.val ? opt.color : '#e2e8f0'}`,
+                    color: action === opt.val ? '#fff' : '#1e293b',
+                    border: `1px solid ${action === opt.val ? opt.color : '#cbd5e1'}`,
                     borderRadius: 6, fontSize: '0.85rem', cursor: 'pointer',
                     textAlign: 'left', fontWeight: action === opt.val ? 600 : 400,
                     transition: 'all 0.15s',
@@ -525,8 +529,8 @@ export default function QuestionReviewPage() {
               disabled={!action || submitting}
               style={{
                 width: '100%', padding: '0.75rem',
-                background: action ? '#3b82f6' : '#e2e8f0',
-                color: action ? '#fff' : '#94a3b8',
+                background: action ? '#3b82f6' : '#cbd5e1',
+                color: action ? '#fff' : '#1e293b',
                 border: 'none', borderRadius: 6, fontSize: '0.875rem', fontWeight: 600,
                 cursor: action && !submitting ? 'pointer' : 'not-allowed',
               }}

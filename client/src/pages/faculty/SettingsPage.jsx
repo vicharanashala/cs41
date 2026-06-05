@@ -9,7 +9,7 @@ function Section({ title, children, action }) {
   return (
     <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e2e8f0', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: '1.25rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-        <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600, letterSpacing: '0.05em' }}>{title}</div>
+        <div style={{ fontSize: '0.7rem', color: '#1e293b', fontWeight: 600, letterSpacing: '0.05em' }}>{title}</div>
         {action}
       </div>
       {children}
@@ -21,8 +21,8 @@ function Row({ label, description, children, error }) {
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', padding: '0.75rem 0', borderBottom: '1px solid #f1f5f9' }}>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>{label}</div>
-        {description && <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 2 }}>{description}</div>}
+        <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{label}</div>
+        {description && <div style={{ fontSize: '0.75rem', color: '#1e293b', marginTop: 2 }}>{description}</div>}
         {error && <div style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: 4 }}>{error}</div>}
       </div>
       <div style={{ flexShrink: 0 }}>{children}</div>
@@ -38,7 +38,7 @@ function Toggle({ value, onChange, disabled }) {
       disabled={disabled}
       style={{
         width: 44, height: 24, borderRadius: 12,
-        background: value ? '#3b82f6' : '#e2e8f0',
+        background: value ? '#3b82f6' : '#cbd5e1',
         border: 'none', cursor: disabled ? 'not-allowed' : 'pointer',
         position: 'relative', transition: 'background 0.2s',
         opacity: disabled ? 0.6 : 1,
@@ -88,7 +88,7 @@ function NumberInput({ value, onChange, min, max, step = 1, disabled, suffix }) 
           textAlign: 'center',
         }}
       />
-      {suffix && <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{suffix}</span>}
+      {suffix && <span style={{ fontSize: '0.75rem', color: '#1e293b' }}>{suffix}</span>}
     </div>
   );
 }
@@ -118,8 +118,8 @@ function SaveButton({ onClick, loading, dirty }) {
       disabled={loading || !dirty}
       style={{
         padding: '0.45rem 1rem',
-        background: dirty ? '#3b82f6' : '#e2e8f0',
-        color: dirty ? '#fff' : '#94a3b8',
+        background: dirty ? '#3b82f6' : '#cbd5e1',
+        color: dirty ? '#fff' : '#1e293b',
         border: 'none', borderRadius: 6,
         fontSize: '0.8rem', fontWeight: 600,
         cursor: dirty ? 'pointer' : 'not-allowed',
@@ -136,8 +136,8 @@ function Badge({ children, color }) {
     <span style={{
       padding: '0.1rem 0.5rem', borderRadius: 10,
       fontSize: '0.7rem', fontWeight: 600,
-      background: (color || '#64748b') + '18',
-      color: color || '#64748b',
+      background: (color || '#1e293b') + '18',
+      color: color || '#1e293b',
     }}>
       {children}
     </span>
@@ -247,7 +247,7 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: '3rem 2rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.9rem' }}>
+      <div style={{ padding: '3rem 2rem', textAlign: 'center', color: '#1e293b', fontSize: '0.9rem' }}>
         Loading settings…
       </div>
     );
@@ -266,7 +266,7 @@ export default function SettingsPage() {
     { value: 'random', label: 'Random' },
   ];
 
-  const ROLE_COLORS = { admin: '#ef4444', faculty: '#3b82f6', verified: '#10b981', intern: '#94a3b8' };
+  const ROLE_COLORS = { admin: '#ef4444', faculty: '#3b82f6', verified: '#10b981', intern: '#1e293b' };
 
   return (
     <div style={{ padding: '2rem', maxWidth: 860, margin: '0 auto' }}>
@@ -275,14 +275,14 @@ export default function SettingsPage() {
       <div style={{ marginBottom: '1.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.25rem' }}>⚙️ Settings</h1>
-          <p style={{ fontSize: '0.85rem', color: '#64748b' }}>Configure platform thresholds, review workflow, moderation, SP rules, and notifications.</p>
+          <p style={{ fontSize: '0.85rem', color: '#1e293b' }}>Configure platform thresholds, review workflow, moderation, SP rules, and notifications.</p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <SaveButton onClick={handleSave} loading={saving} dirty={dirtyCount > 0} />
           <button
             onClick={handleReset}
             disabled={resetting}
-            style={{ padding: '0.45rem 0.8rem', background: '#f1f5f9', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: '0.8rem', cursor: 'pointer' }}
+            style={{ padding: '0.45rem 0.8rem', background: '#f1f5f9', color: '#1e293b', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: '0.8rem', cursor: 'pointer' }}
           >
             {resetting ? 'Resetting…' : '↺ Reset to Defaults'}
           </button>
@@ -523,20 +523,20 @@ export default function SettingsPage() {
 
       {/* ── Faculty Role Management ──────────────────────────────────────── */}
       <Section title="FACULTY & ROLE MANAGEMENT">
-        <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '1rem' }}>
+        <div style={{ fontSize: '0.8rem', color: '#1e293b', marginBottom: '1rem' }}>
           {faculty.length} faculty/admin account{faculty.length !== 1 ? 's' : ''} · changes take effect immediately
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           {faculty.map(u => (
             <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
               {/* Avatar placeholder */}
-              <div style={{ width: 36, height: 36, borderRadius: 18, background: (ROLE_COLORS[u.role] || '#64748b') + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', flexShrink: 0 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 18, background: (ROLE_COLORS[u.role] || '#1e293b') + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', flexShrink: 0 }}>
                 👤
               </div>
               {/* Name + email */}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{u.name || '—'}</div>
-                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{u.email}</div>
+                <div style={{ fontSize: '0.75rem', color: '#1e293b' }}>{u.email}</div>
               </div>
               {/* Current role badge */}
               <Badge color={ROLE_COLORS[u.role]}>{u.role}</Badge>
@@ -549,13 +549,13 @@ export default function SettingsPage() {
                 {ROLE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
               {/* Reputation */}
-              <div style={{ fontSize: '0.8rem', color: '#94a3b8', minWidth: 48, textAlign: 'right' }}>
+              <div style={{ fontSize: '0.8rem', color: '#1e293b', minWidth: 48, textAlign: 'right' }}>
                 ⭐ {u.reputation ?? 0}
               </div>
             </div>
           ))}
           {faculty.length === 0 && (
-            <div style={{ color: '#94a3b8', fontSize: '0.85rem', textAlign: 'center', padding: '1rem' }}>
+            <div style={{ color: '#1e293b', fontSize: '0.85rem', textAlign: 'center', padding: '1rem' }}>
               No faculty accounts found.
             </div>
           )}
